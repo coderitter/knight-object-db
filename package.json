@@ -1,0 +1,38 @@
+{
+  "name": "mega-nice-browser-db",
+  "version": "0.0.0",
+  "description": "A mega nice database for the browser.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "dependencies": {
+    "mega-nice-db-query-parameter": "^1.0.2",
+    "mega-nice-db-query-parameter-matcher": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.7",
+    "@types/mocha": "^5.2.7",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.2",
+    "ts-node": "^8.5.4",
+    "typescript": "^3.8.2"
+  },
+  "scripts": {
+    "test": "mocha -r ts-node/register \"test/**/*.test.ts\"",
+    "build": "rm -rf lib && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/c0deritter/mega-nice-db-query-parameter-db.git"
+  },
+  "keywords": [
+    ""
+  ],
+  "author": "Coderitter GmbH",
+  "bugs": {
+    "url": "https://github.com/c0deritter/mega-nice-db-query-parameter-db/issues"
+  },
+  "homepage": "https://github.com/c0deritter/mega-nice-db-query-parameter-db#readme"
+}
