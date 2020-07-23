@@ -1,6 +1,6 @@
 {
   "name": "mega-nice-browser-db",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A mega nice database for the browser.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

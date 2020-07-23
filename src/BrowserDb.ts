@@ -10,10 +10,9 @@ export default class BrowserDb {
     this.fetches.push(fetch)
   }
 
-  async fetchAll(): Promise<void> {
+  fetchAll(): void {
     for (let fetch of this.fetches) {
-      let result = await fetch()
-      this.incorporateEntities(result.value)
+      fetch()
     }
   }
 
@@ -28,7 +27,7 @@ export default class BrowserDb {
     return store
   }
 
-  async read<T>(entityName: string, parameter?: DbSelectParameter): Promise<T[]> {
+  read<T>(entityName: string, parameter?: DbSelectParameter): T[] {
     let store = this.getStore(entityName)
     let entities: any[] = []
 
