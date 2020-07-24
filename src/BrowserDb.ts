@@ -1,4 +1,4 @@
-import { DbSelectParameter } from 'mega-nice-db-query-parameter'
+import { DbSelectParameter, DbDeleteParameter, DbUpdateParameter } from 'mega-nice-db-query-parameter'
 import { matchCriteria } from 'mega-nice-db-query-parameter-matcher'
 
 export default class BrowserDb {
@@ -27,6 +27,11 @@ export default class BrowserDb {
     return store
   }
 
+  create<T>(entityName: string, entity: any): void {
+    let store = this.getStore(entityName)
+    store.push(entity)
+  }
+
   read<T>(entityName: string, parameter?: DbSelectParameter): T[] {
     let store = this.getStore(entityName)
     let entities: any[] = []
@@ -35,6 +40,39 @@ export default class BrowserDb {
       if (matchCriteria(entity, parameter)) {
         entities.push(entity)
       }
+    }
+
+    return entities
+  }
+
+  update<T>(entityName: string, parameter: DbUpdateParameter): T[] {
+    let entities: any[] = this.read(entityName, parameter.criteria)
+
+    for (let entity of entities) {
+      for (let prop in parameter) {
+        if (prop == 'criteria') {
+          continue
+        }
+
+        entity[prop] = parameter[prop]
+      }
+    }
+
+    return entities
+  }
+
+  delete<T>(entityName: string, parameter?: DbDeleteParameter): T[] {
+    let store = this.getStore(entityName)
+    let entities: any[] = []
+
+    for (let entity of store) {
+      if (matchCriteria(entity, parameter)) {
+        entities.push(entity)
+      }
+    }
+
+    for (let entity of entities) {
+      store.splice(store.indexOf(entity), 1)
     }
 
     return entities

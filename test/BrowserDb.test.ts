@@ -197,97 +197,96 @@ describe('BrowserDb', function() {
     })
   })
 
-  // describe('insert', function() {
-  //   it('should insert an entity and assign an id', async function() {
-  //     let db = new BrowserDb
+  describe('create', function() {
+    it('should create an entity', async function() {
+      let db = new BrowserDb
+      db.create('TestClass', { a: 'a' })
+      let store = db.getStore('TestClass')
+      expect(store.length).to.equal(1)
+    })
+  })
 
-  //     let result = await db.insert(TestClass, {})
+  describe('select', function() {
+    it('should find all entities with certain criteria', async function() {
+      let db = new BrowserDb
 
-  //     expect(result.id).to.equal(1)
-  //   })
-  // })
+      db.create('TestClass', { a: 'a', b: 1 })
+      db.create('TestClass', { a: 'b', b: 1 })
+      db.create('TestClass', { a: 'a', b: 2 })
+      db.create('TestClass', { a: 'b', b: 2 })
 
-  // describe('select', function() {
-  //   it('should find all entities with certain criteria', async function() {
-  //     let db = new BrowserDb
+      let result: any[] = db.read('TestClass', { a: ['a', 'b'], b: 1 })
 
-  //     db.insert('TestClass', { a: 'a', b: 1 })
-  //     db.insert('TestClass', { a: 'b', b: 1 })
-  //     db.insert('TestClass', { a: 'a', b: 2 })
-  //     db.insert('TestClass', { a: 'b', b: 2 })
+      expect(result.length).to.equal(2)
+      expect(result[0].a).to.equal('a')
+      expect(result[0].b).to.equal(1)
+      expect(result[1].a).to.equal('b')
+      expect(result[1].b).to.equal(1)
+    })
+  })
 
-  //     let result = await db.select(TestClass, { a: ['a', 'b'], b: 1 })
+  describe('update', function() {
+    it('should update all entities with certain criteria', async function() {
+      let db = new BrowserDb
 
-  //     expect(result.length).to.equal(2)
-  //     expect(result[0].a).to.equal('a')
-  //     expect(result[0].b).to.equal(1)
-  //     expect(result[1].a).to.equal('b')
-  //     expect(result[1].b).to.equal(1)
-  //   })
-  // })
+      let obj1 = { a: 'a', b: 1 }
+      let obj2 = { a: 'b', b: 1 }
+      let obj3 = { a: 'a', b: 2 }
+      let obj4 = { a: 'b', b: 2 }
 
-  // describe('update', function() {
-  //   it('should update all entities with certain criteria', async function() {
-  //     let db = new BrowserDb
+      db.create('TestClass', obj1)
+      db.create('TestClass', obj2)
+      db.create('TestClass', obj3)
+      db.create('TestClass', obj4)
 
-  //     let obj1 = { a: 'a', b: 1 }
-  //     let obj2 = { a: 'b', b: 1 }
-  //     let obj3 = { a: 'a', b: 2 }
-  //     let obj4 = { a: 'b', b: 2 }
+      let result: any[] = db.update('TestClass', { a: 'c', b: 3, criteria: { a: ['a', 'b'], b: 1 }})
 
-  //     db.insert('TestClass', obj1)
-  //     db.insert('TestClass', obj2)
-  //     db.insert('TestClass', obj3)
-  //     db.insert('TestClass', obj4)
+      expect(result.length).to.equal(2)
+      expect(result[0].a).to.equal('c')
+      expect(result[0].b).to.equal(3)
+      expect(result[1].a).to.equal('c')
+      expect(result[1].b).to.equal(3)
 
-  //     let result = await db.update(TestClass, { a: 'c', b: 3, criteria: { a: ['a', 'b'], b: 1 }})
+      expect(obj1.a).to.equal('c')
+      expect(obj1.b).to.equal(3)
+      expect(obj2.a).to.equal('c')
+      expect(obj2.b).to.equal(3)
+      expect(obj3.a).to.equal('a')
+      expect(obj3.b).to.equal(2)
+      expect(obj4.a).to.equal('b')
+      expect(obj4.b).to.equal(2)
+    })
+  })
 
-  //     expect(obj1.a).to.equal('c')
-  //     expect(obj1.b).to.equal(3)
-  //     expect(obj2.a).to.equal('c')
-  //     expect(obj2.b).to.equal(3)
-  //     expect(obj3.a).to.equal('a')
-  //     expect(obj3.b).to.equal(2)
-  //     expect(obj4.a).to.equal('b')
-  //     expect(obj4.b).to.equal(2)
-  //   })
-  // })
+  describe('delete', function() {
+    it('should delete all entities with certain criteria', async function() {
+      let db = new BrowserDb
 
-  // describe('delete', function() {
-  //   it('should delete all entities with certain criteria', async function() {
-  //     let db = new BrowserDb
+      db.create('TestClass', { a: 'a', b: 1 })
+      db.create('TestClass', { a: 'b', b: 1 })
+      db.create('TestClass', { a: 'a', b: 2 })
+      db.create('TestClass', { a: 'b', b: 2 })
 
-  //     db.insert('TestClass', { a: 'a', b: 1 })
-  //     db.insert('TestClass', { a: 'b', b: 1 })
-  //     db.insert('TestClass', { a: 'a', b: 2 })
-  //     db.insert('TestClass', { a: 'b', b: 2 })
+      let result: any[] = db.delete('TestClass', { a: ['a', 'b'], b: 1 })
 
-  //     let result = await db.delete(TestClass, { a: ['a', 'b'], b: 1 })
+      expect(result.length).to.equal(2)
+      expect(result[0].a).to.equal('a')
+      expect(result[0].b).to.equal(1)
+      expect(result[1].a).to.equal('b')
+      expect(result[1].b).to.equal(1)
 
-  //     expect(result.length).to.equal(2)
-  //     expect(result[0].a).to.equal('a')
-  //     expect(result[0].b).to.equal(1)
-  //     expect(result[1].a).to.equal('b')
-  //     expect(result[1].b).to.equal(1)
-
-  //     let selectResult = await db.select(TestClass)
+      let readResult: any[] = db.read('TestClass')
       
-  //     expect(selectResult.length).to.equal(2)
-  //     expect(selectResult[0].a).to.equal('a')
-  //     expect(selectResult[0].b).to.equal(2)
-  //     expect(selectResult[1].a).to.equal('b')
-  //     expect(selectResult[1].b).to.equal(2)
-  //   })
-  // })
+      expect(readResult.length).to.equal(2)
+      expect(readResult[0].a).to.equal('a')
+      expect(readResult[0].b).to.equal(2)
+      expect(readResult[1].a).to.equal('b')
+      expect(readResult[1].b).to.equal(2)
+    })
+  })
 })
 
 class SimpleClass {
   className?: string
   constructor(public a: string, public b: number) {}
-}
-
-class TestClass {
-  id!: number
-  a!: string
-  b!: number
 }
