@@ -1,4 +1,4 @@
-import { DbSelectParameter, DbDeleteParameter, DbUpdateParameter } from 'mega-nice-db-query-parameter'
+import { DbDeleteParameter, DbReadParameter, DbUpdateParameter } from 'mega-nice-db-query-parameter'
 import { matchCriteria } from 'mega-nice-db-query-parameter-matcher'
 
 export default class BrowserDb {
@@ -10,10 +10,15 @@ export default class BrowserDb {
     this.fetches.push(fetch)
   }
 
-  fetchAll(): void {
+  async fetchAll(): Promise<void> {
+    let promises: Promise<any>[] = []
+
     for (let fetch of this.fetches) {
-      fetch()
+      let promise = fetch()
+      promises.push(promise)
     }
+
+    await Promise.all(promises)
   }
 
   getStore(entityName: string): any[] {
@@ -32,7 +37,7 @@ export default class BrowserDb {
     store.push(entity)
   }
 
-  read<T>(entityName: string, parameter?: DbSelectParameter): T[] {
+  read<T>(entityName: string, parameter?: DbReadParameter): T[] {
     let store = this.getStore(entityName)
     let entities: any[] = []
 
