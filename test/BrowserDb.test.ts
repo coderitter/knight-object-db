@@ -289,6 +289,21 @@ describe('BrowserDb', function() {
       expect(store.length).to.equal(1)
       expect(store[0]).to.deep.equal(obj3)
     })
+
+    it('should use given idProps to avoid duplicate entries', function() {
+      let db = new BrowserDb
+      db.provideIdProps('A', ['id'])
+
+      let obj1 = { className: 'A', id: 1, a: 'a' }
+      let obj2 = { className: 'A', id: 1, a: 'b' }
+
+      db.incorporateEntities([ obj1, obj2 ])
+
+      let store = db.getStore('A')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(1)
+      expect(store[0]).to.deep.equal(obj1)
+    })
   })
 
   describe('create', function() {

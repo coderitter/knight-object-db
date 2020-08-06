@@ -1,10 +1,11 @@
-import { DbDeleteParameter, DbReadParameter, DbUpdateParameter } from 'mega-nice-db-query-parameter'
+import { DbDeleteParameter, DbReadParameter, DbUpdateParameter, DbCriteria } from 'mega-nice-db-query-parameter'
 import { matchCriteria } from 'mega-nice-db-query-parameter-matcher'
 
 export default class BrowserDb {
 
   fetches: (() => Promise<any>)[] = []
   stores: { [entityName: string]: any[] } = {}
+  idProps: { [entityName: string]: string[] } = {}
 
   fetch(fetch: () => Promise<any>): void {
     this.fetches.push(fetch)
@@ -30,6 +31,14 @@ export default class BrowserDb {
     }
 
     return store
+  }
+
+  provideIdProps(entityName: string, idProps: string[]) {
+    this.idProps[entityName] = idProps
+  }
+
+  getIdProps(entityName: string): string[]|undefined {
+    return this.idProps[entityName]
   }
 
   create<T>(entityName: string, entity: any): void {
@@ -107,7 +116,22 @@ export default class BrowserDb {
         return
       }
 
-      store.push(entity)
+      let idProps = this.getIdProps(entityName)
+      let existingEntity: any[]|undefined = undefined
+
+      if (idProps) {
+        let parameter: DbReadParameter = {}
+        for (let idProp of idProps) {
+          if (entity[idProp] !== undefined)
+          parameter[idProp] = entity[idProp]
+        }
+
+        existingEntity = this.read(entityName, parameter)
+      }
+
+      if (existingEntity == undefined || existingEntity.length == 0) {
+        store.push(entity)
+      }
 
       for (let prop in entity) {
         if (! Object.prototype.hasOwnProperty.call(entity, prop)) {

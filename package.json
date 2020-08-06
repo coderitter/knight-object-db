@@ -1,6 +1,6 @@
 {
   "name": "mega-nice-browser-db",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A mega nice database for the browser.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -14,6 +14,7 @@
   "devDependencies": {
     "@types/chai": "^4.2.7",
     "@types/mocha": "^5.2.7",
+    "@types/node": "^14.0.27",
     "chai": "^4.2.0",
     "mocha": "^6.2.2",
     "ts-node": "^8.5.4",
