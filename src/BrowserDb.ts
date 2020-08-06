@@ -89,7 +89,7 @@ export default class BrowserDb {
         this.incorporateEntities(entity)
       }
     }
-    else if (typeof entityOrEntities == 'object') {
+    else if (typeof entityOrEntities == 'object' && entityOrEntities !== null) {
       let entity = entityOrEntities
 
       let entityName

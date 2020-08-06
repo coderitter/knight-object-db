@@ -35,6 +35,22 @@ describe('BrowserDb', function() {
       expect(store[0].b).to.equal(1)
     })
 
+    it('should be able to handle null values which in JavaScipt are objects', function() {
+      let db = new BrowserDb
+      
+      let obj = {
+        className: 'A',
+        a: null
+      }
+
+      db.incorporateEntities(obj)
+
+      let store = db.getStore('A')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(1)
+      expect(store[0]).to.deep.equal(obj)
+    })
+
     it('should incorporate an array of simple objects having a className property', function() {
       let db = new BrowserDb
       
@@ -194,6 +210,26 @@ describe('BrowserDb', function() {
       expect(store).to.be.not.undefined
       expect(store.length).to.equal(1)
       expect(store[0]).to.deep.equal({ className: 'C', c: 'c' })
+    })
+
+    it('should handle circular references of the same class', function() {
+      let db = new BrowserDb
+
+      class A { constructor(public a?: any) {}}
+
+      let obj1 = new A
+      let obj2 = new A
+
+      obj1.a = obj2
+      obj2.a = obj1
+
+      db.incorporateEntities(obj1)
+
+      let store = db.getStore('A')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(2)
+      expect(store[0]).to.deep.equal(obj1)
+      expect(store[1]).to.deep.equal(obj2)
     })
   })
 
