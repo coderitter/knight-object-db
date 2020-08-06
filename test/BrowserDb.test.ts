@@ -231,6 +231,64 @@ describe('BrowserDb', function() {
       expect(store[0]).to.deep.equal(obj1)
       expect(store[1]).to.deep.equal(obj2)
     })
+
+    it('should handle circular references of different classes', function() {
+      let db = new BrowserDb
+
+      class A { constructor(public a?: any) {}}
+      class B { constructor(public b?: any) {}}
+
+      let obj1 = new A
+      let obj2 = new B
+
+      obj1.a = obj2
+      obj2.b = obj1
+
+      db.incorporateEntities(obj1)
+
+      let store = db.getStore('A')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(1)
+      expect(store[0]).to.deep.equal(obj1)
+
+      store = db.getStore('B')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(1)
+      expect(store[0]).to.deep.equal(obj2)
+    })
+
+    it('should handle circular references of with a class in between', function() {
+      let db = new BrowserDb
+
+      class A { constructor(public a?: any) {}}
+      class B { constructor(public b?: any) {}}
+      class C { constructor(public c?: any) {}}
+
+      let obj1 = new A
+      let obj2 = new B
+      let obj3 = new C
+
+      obj1.a = obj2
+      obj2.b = obj3
+      obj3.c = obj1
+
+      db.incorporateEntities(obj1)
+
+      let store = db.getStore('A')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(1)
+      expect(store[0]).to.deep.equal(obj1)
+
+      store = db.getStore('B')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(1)
+      expect(store[0]).to.deep.equal(obj2)
+
+      store = db.getStore('C')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(1)
+      expect(store[0]).to.deep.equal(obj3)
+    })
   })
 
   describe('create', function() {

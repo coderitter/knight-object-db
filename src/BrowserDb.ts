@@ -101,6 +101,12 @@ export default class BrowserDb {
       }
 
       let store = this.getStore(entityName)
+
+      // avoid circles
+      if (store.indexOf(entity) > -1) {
+        return
+      }
+
       store.push(entity)
 
       for (let prop in entity) {
@@ -109,6 +115,7 @@ export default class BrowserDb {
         }
 
         let value = entity[prop]
+
         this.incorporateEntities(value)
       }
     }
