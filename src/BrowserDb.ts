@@ -92,11 +92,16 @@ export default class BrowserDb {
     return entities
   }
 
-  incorporateEntities(entityOrEntities: any|any[]): void {
+  incorporateEntities(entityOrEntities: any|any[]): any {
     if (entityOrEntities instanceof Array) {
+      let incorporatedArray = []
+
       for (let entity of entityOrEntities) {
-        this.incorporateEntities(entity)
+        let incorporatedEntity = this.incorporateEntities(entity)
+        incorporatedArray.push(incorporatedEntity)
       }
+
+      return incorporatedArray
     }
     else if (typeof entityOrEntities == 'object' && entityOrEntities !== null) {
       let entity = entityOrEntities
@@ -117,7 +122,7 @@ export default class BrowserDb {
       }
 
       let idProps = this.getIdProps(entityName)
-      let existingEntity: any[]|undefined = undefined
+      let incorporatedEntity: any = undefined
 
       if (idProps) {
         let parameter: DbReadParameter = {}
@@ -126,25 +131,32 @@ export default class BrowserDb {
           parameter[idProp] = entity[idProp]
         }
 
-        existingEntity = this.read(entityName, parameter)
+        let incorporatedEntities = this.read(entityName, parameter)
+
+        if (incorporatedEntities != undefined && incorporatedEntities.length > 0) {
+          incorporatedEntity = incorporatedEntities[0]
+        }
       }
 
-      if (existingEntity == undefined || existingEntity.length == 0) {
+      if (incorporatedEntity == undefined) {
         store.push(entity)
+        incorporatedEntity = entity
       }
 
-      for (let prop in entity) {
-        if (! Object.prototype.hasOwnProperty.call(entity, prop)) {
+      for (let prop in incorporatedEntity) {
+        if (! Object.prototype.hasOwnProperty.call(incorporatedEntity, prop)) {
           continue
         }
 
-        let value = entity[prop]
-
-        this.incorporateEntities(value)
+        let value = incorporatedEntity[prop]
+        let incorporatedValue = this.incorporateEntities(value)
+        incorporatedEntity[prop] = incorporatedValue
       }
+
+      return incorporatedEntity
     }
     else {
-      // do nothing
+      return entityOrEntities
     }
   }
 }

@@ -304,6 +304,54 @@ describe('BrowserDb', function() {
       expect(store.length).to.equal(1)
       expect(store[0]).to.deep.equal(obj1)
     })
+
+    it('should use given idProps and replace the duplicate objects with the one', function() {
+      let db = new BrowserDb
+      db.provideIdProps('A', ['id'])
+      db.provideIdProps('B', ['id'])
+
+      let b1 = { className: 'B', id: 1, b: 1 }
+      let b2 = { className: 'B', id: 1, b: 2 }
+      let obj1 = { className: 'A', id: 1, a: b1 }
+      let obj2 = { className: 'A', id: 2, a: b2 }
+
+      db.incorporateEntities([ obj1, obj2 ])
+
+      let store = db.getStore('A')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(2)
+      expect(store[0]).to.deep.equal({ className: 'A', id: 1, a: b1 })
+      expect(store[1]).to.deep.equal({ className: 'A', id: 2, a: b1 })
+
+      store = db.getStore('B')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(1)
+      expect(store[0]).to.deep.equal(b1)
+    })    
+
+    it('should use given idProps and replace the duplicate objects with the one inside arrays', function() {
+      let db = new BrowserDb
+      db.provideIdProps('A', ['id'])
+      db.provideIdProps('B', ['id'])
+
+      let b1 = { className: 'B', id: 1, b: 1 }
+      let b2 = { className: 'B', id: 1, b: 2 }
+      let obj1 = { className: 'A', id: 1, a: [ b1 ]}
+      let obj2 = { className: 'A', id: 2, a: [ b2 ]}
+
+      db.incorporateEntities([ obj1, obj2 ])
+
+      let store = db.getStore('A')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(2)
+      expect(store[0]).to.deep.equal({ className: 'A', id: 1, a: [ b1 ]})
+      expect(store[1]).to.deep.equal({ className: 'A', id: 2, a: [ b1 ]})
+
+      store = db.getStore('B')
+      expect(store).to.be.not.undefined
+      expect(store.length).to.equal(1)
+      expect(store[0]).to.deep.equal(b1)
+    })    
   })
 
   describe('create', function() {
