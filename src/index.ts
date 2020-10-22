@@ -1,1 +1,1 @@
-export { default as BrowserDb } from './BrowserDb'
+export { default as ObjectDb } from './ObjectDb'

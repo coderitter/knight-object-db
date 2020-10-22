@@ -1,15 +1,15 @@
 {
-  "name": "mega-nice-browser-db",
-  "version": "1.2.0",
-  "description": "A mega nice database for the browser.",
+  "name": "mega-nice-object-db",
+  "version": "2.0.0",
+  "description": "A mega nice database for objects",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
     "lib/**/*"
   ],
   "dependencies": {
-    "mega-nice-db-query-parameter": "^1.0.2",
-    "mega-nice-db-query-parameter-matcher": "^3.0.0"
+    "mega-nice-criteria": "^5.2.0",
+    "mega-nice-criteria-matcher": "^5.0.1"
   },
   "devDependencies": {
     "@types/chai": "^4.2.7",
@@ -26,14 +26,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/c0deritter/mega-nice-db-query-parameter-db.git"
+    "url": "git+https://github.com/c0deritter/mega-nice-object-db.git"
   },
   "keywords": [
     ""
   ],
   "author": "Coderitter GmbH",
   "bugs": {
-    "url": "https://github.com/c0deritter/mega-nice-db-query-parameter-db/issues"
+    "url": "https://github.com/c0deritter/mega-nice-object-db/issues"
   },
-  "homepage": "https://github.com/c0deritter/mega-nice-db-query-parameter-db#readme"
+  "homepage": "https://github.com/c0deritter/mega-nice-object-db#readme"
 }
