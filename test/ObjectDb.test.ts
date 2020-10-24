@@ -1,378 +1,284 @@
 import { expect } from 'chai'
+import { Change } from 'mega-nice-change'
 import 'mocha'
 import { ObjectDb } from '../src'
+import { ManyObject, Object1, Object2, schema } from './TestSchema'
 
 describe('ObjectDb', function() {
-  describe('incorporateEntities', function() {
-    it('should incorporate a simple class', function() {
-      let db = new ObjectDb
+  describe('create', function() {
+    it('should create a simple class', function() {
+      let db = new ObjectDb(schema)
       
-      let obj = new SimpleClass('a', 1)
-      db.incorporate(obj)
+      let obj = new Object1
+      obj.id = 1
+      obj.property1 = 'a'
+      obj.property2 = 1
+      obj.object1Id = null
+      obj.object2Id = null
+      
+      let changes = db.create(obj)
 
-      let store = db.getObjects('SimpleClass')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0].a).to.equal('a')
-      expect(store[0].b).to.equal(1)
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(obj, 'create'))
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(1)
+      expect(objects[0]).to.equal(obj)
     })
 
-    it('should incorporate a simple object having a className property', function() {
-      let db = new ObjectDb
-      
-      let obj = {
-        className: 'A',
-        a: 'a',
-        b: 1
-      }
-
-      db.incorporate(obj)
-
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0].a).to.equal('a')
-      expect(store[0].b).to.equal(1)
-    })
-
-    it('should be able to handle null values which in JavaScipt are objects', function() {
-      let db = new ObjectDb
+    it('should create a simple class given as a plain object', function() {
+      let db = new ObjectDb(schema)
       
       let obj = {
-        className: 'A',
-        a: null
+        id: 1,
+        property1: 'a',
+        property2: 1,
+        object1Id: null,
+        object2Id: null
       }
 
-      db.incorporate(obj)
+      let changes = db.create('Object1', obj)
 
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal(obj)
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(Object1, obj, 'create'))
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(1)
+      expect(objects[0]).to.equal(obj)
     })
 
-    it('should incorporate an array of simple objects having a className property', function() {
-      let db = new ObjectDb
+    it('should create a list of simple objects', function() {
+      let db = new ObjectDb(schema)
+      
+      let objs = [
+        new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3)
+      ]
+
+      let changes = db.create('Object1', objs)
+
+      expect(changes.changes.length).to.equal(3)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(objs[0], 'create'))
+      expect(changes.changes[1]).to.deep.equal(
+        new Change(objs[1], 'create'))
+      expect(changes.changes[2]).to.deep.equal(
+        new Change(objs[2], 'create'))
+      
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(3)
+      expect(objects[0]).to.equal(objs[0])
+      expect(objects[1]).to.equal(objs[1])
+      expect(objects[2]).to.equal(objs[2])
+    })
+
+    it('should create a list of simple objects given as plain objects', function() {
+      let db = new ObjectDb(schema)
       
       let objs = [
         {
-          className: 'A',
-          a: 'a',
-          b: 1
+          id: 1,
+          property1: 'a',
+          property2: 1
         },
         {
-          className: 'B',
-          a: 'b',
-          b: 2
+          id: 2,
+          property1: 'b',
+          property2: 2
         },
         {
-          className: 'A',
-          a: 'c',
-          b: 3
-        },
+          id: 3,
+          property1: 'c',
+          property2: 3
+        }
       ]
 
-      db.incorporate(objs)
+      let changes = db.create('Object1', objs)
 
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(2)
-      expect(store[0].a).to.equal('a')
-      expect(store[0].b).to.equal(1)
-      expect(store[1].a).to.equal('c')
-      expect(store[1].b).to.equal(3)
+      expect(changes.changes.length).to.equal(3)
+      expect(changes.changes).to.deep.equal([
+        new Change('Object1', objs[0], 'create'), new Change('Object1', objs[1], 'create'), new Change('Object1', objs[2], 'create')
+      ])
 
-      store = db.getObjects('B')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0].a).to.equal('b')
-      expect(store[0].b).to.equal(2)
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(3)
+      expect(objects[0]).to.equal(objs[0])
+      expect(objects[1]).to.equal(objs[1])
+      expect(objects[2]).to.equal(objs[2])
     })
 
-    it('should incorpate an object having sub objects', function() {
-      let db = new ObjectDb
+    it('should create a list of mixed simple objects', function() {
+      let db = new ObjectDb(schema)
       
-      let obj = {
-        className: 'A',
-        b: {
-          className: 'B',
-          b1: 'b1',
-          b2: {
-            className: 'A',
-            a21: 'a21'
-          }
-        },
-        c: {
-          className: 'C',
-          c1: {
-            className: 'A',
-            a11: 'a11'
-          },
-          b2: {
-            className: 'B',
-            b21: 'b21'
-          }
-        }
-      }
+      let objs = [
+        new Object1(1, 'a', 1), new Object2('x', 'b')
+      ]
 
-      db.incorporate(obj)
+      let changes = db.create(objs)
 
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(3)
-      expect(store[0]).to.deep.equal({
-        className: 'A',
-        b: {
-          className: 'B',
-          b1: 'b1',
-          b2: {
-            className: 'A',
-            a21: 'a21'
-          }
-        },
-        c: {
-          className: 'C',
-          c1: {
-            className: 'A',
-            a11: 'a11'
-          },
-          b2: {
-            className: 'B',
-            b21: 'b21'
-          }
-        }
-      })
-      expect(store[1]).to.deep.equal({
-        className: 'A',
-        a21: 'a21'
-      })
-      expect(store[2]).to.deep.equal({
-        className: 'A',
-        a11: 'a11'
-      })
+      expect(changes.changes.length).to.equal(2)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(objs[0], 'create'))
+      expect(changes.changes[1]).to.deep.equal(
+        new Change(objs[1], 'create'))
 
-      store = db.getObjects('B')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(2)
-      expect(store[0]).to.deep.equal({
-        className: 'B',
-        b1: 'b1',
-        b2: {
-          className: 'A',
-          a21: 'a21'
-        }
-      })
-      expect(store[1]).to.deep.equal({
-        className: 'B',
-        b21: 'b21'
-      })
+      let objects1 = db.getObjects('Object1')
+      expect(objects1).to.be.not.undefined
+      expect(objects1.length).to.equal(1)
+      expect(objects1[0]).to.equal(objs[0])
 
-      store = db.getObjects('C')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal({
-        className: 'C',
-        c1: {
-          className: 'A',
-          a11: 'a11'
-        },
-        b2: {
-          className: 'B',
-          b21: 'b21'
-        }
-      })
+      let objects2 = db.getObjects('Object2')
+      expect(objects2).to.be.not.undefined
+      expect(objects2.length).to.equal(1)
+      expect(objects2[0]).to.equal(objs[1])
     })
 
-    it('should incorpate an object having arrays', function() {
-      let db = new ObjectDb
-      
-      let obj = {
-        className: 'A',
-        a: [ 'a', { className: 'B', b: 'b'}, { className: 'C', c: 'c' }]
-      }
+    it('should not get into cycles', function() {
+      let db = new ObjectDb(schema)
+      let obj1 = new Object1(1, 'a', 1, 1)
+      obj1.object1 = obj1
 
-      db.incorporate(obj)
+      let changes = db.create(obj1)
 
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal({
-        className: 'A',
-        a: [ 'a', { className: 'B', b: 'b'}, { className: 'C', c: 'c' }]
-      })
-
-      store = db.getObjects('B')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal({ className: 'B', b: 'b'})
-
-      store = db.getObjects('C')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal({ className: 'C', c: 'c' })
+      expect(changes.changes).to.deep.equal([
+        new Change(obj1, [ 'create' ])
+      ])
     })
 
-    it('should handle circular references of the same class', function() {
-      let db = new ObjectDb
+    it('should create multiple objects referencing each other but are not wired', function() {
+      let db = new ObjectDb(schema)
 
-      class A { constructor(public a?: any) {}}
+      let obj11 = new Object1(1, 'a', 1, 2, 'x')
+      let obj12 = new Object1(2, 'b', 2, 1, 'y')
+      let obj21 = new Object2('x', 'c')
+      let obj22 = new Object2('y', 'd')
+      let many1 = new ManyObject(1, 'x', 'e', 1)
+      let many2 = new ManyObject(1, 'y', 'f', 2)
 
-      let obj1 = new A
-      let obj2 = new A
+      let changes = db.create([ obj11, obj12, obj21, obj22, many1, many2 ])
 
-      obj1.a = obj2
-      obj2.a = obj1
+      expect(changes.changes.length).to.equal(6)
+      expect(changes.changes).deep.equal([
+        new Change(obj11, ['create']),
+        new Change(obj12, ['create']),
+        new Change(obj21, ['create']),
+        new Change(obj22, ['create']),
+        new Change(many1, ['create']),
+        new Change(many2, ['create'])
+      ])
 
-      db.incorporate(obj1)
+      let objects1 = db.getObjects('Object1')
+      expect(objects1).to.be.not.undefined
+      expect(objects1.length).to.equal(2)
+      expect(objects1[0].object1).to.equal(obj12)
+      expect(objects1[0].object2).to.equal(obj21)
+      expect(objects1[0].many).to.deep.equal([ many1, many2 ])
+      expect(objects1[1].object1).to.equal(obj11)
+      expect(objects1[1].object2).to.equal(obj22)
 
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(2)
-      expect(store[0]).to.deep.equal(obj1)
-      expect(store[1]).to.deep.equal(obj2)
+      let objects2 = db.getObjects('Object2')
+      expect(objects2).to.be.not.undefined
+      expect(objects2.length).to.equal(2)
+      expect(objects2[0].object1Id).to.equal(1)
+      expect(objects2[0].object1).to.equal(obj11)
+      expect(objects2[0].many).to.deep.equal([ many1 ])
+      expect(objects2[1].object1Id).to.equal(2)
+      expect(objects2[1].object1).to.equal(obj12)
+      expect(objects2[1].many).to.deep.equal([ many2 ])
+
+      let objectManies = db.getObjects('ManyObject')
+      expect(objectManies).to.be.not.undefined
+      expect(objectManies.length).to.equal(2)
+      expect(objectManies[0].object1).to.equal(obj11)
+      expect(objectManies[0].object2).to.equal(obj21)
+      expect(objectManies[0].object12).to.equal(obj11)
+      expect(objectManies[1].object1).to.equal(obj11)
+      expect(objectManies[1].object2).to.equal(obj22)
+      expect(objectManies[1].object12).to.equal(obj12)
     })
 
-    it('should handle circular references of different classes', function() {
-      let db = new ObjectDb
+    it('should create an object with multiple relationships', function() {
+      let db = new ObjectDb(schema)
 
-      class A { constructor(public a?: any) {}}
-      class B { constructor(public b?: any) {}}
+      let obj11 = new Object1(1, 'a', 1, 2, 'x')
+      let obj12 = new Object1(2, 'b', 2, undefined, 'y')
+      let obj21 = new Object2('x', 'c')
+      let obj22 = new Object2('y', 'd')
+      let many1 = new ManyObject(1, 'x', 'e', 1)
+      let many2 = new ManyObject(1, 'y', 'f', 2)
 
-      let obj1 = new A
-      let obj2 = new B
+      obj11.object1 = obj12
+      obj11.object2 = obj21
+      obj11.many = [ many1, many2 ]
+      many2.object2 = obj22
 
-      obj1.a = obj2
-      obj2.b = obj1
+      let changes = db.create(obj11)
 
-      db.incorporate(obj1)
+      expect(changes.changes.length).to.equal(6)
+      expect(changes.changes).deep.equal([
+        new Change(obj11, ['create']),
+        new Change(many1, ['create']),
+        new Change(many2, ['create']),
+        new Change(obj22, ['create']),
+        new Change(obj12, ['create']),
+        new Change(obj21, ['create']),
+      ])
 
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal(obj1)
+      let objects1 = db.getObjects('Object1')
+      expect(objects1).to.be.not.undefined
+      expect(objects1.length).to.equal(2)
+      expect(objects1[0].id).to.equal(1)
+      expect(objects1[0].object1).to.equal(obj12)
+      expect(objects1[0].object2).to.equal(obj21)
+      expect(objects1[0].many).to.deep.equal([ many1, many2 ])
+      expect(objects1[1].id).to.equal(2)
+      expect(objects1[1].object1Id).to.equal(1)
+      expect(objects1[1].object1).to.equal(obj11)
+      expect(objects1[1].object2).to.equal(obj22)
 
-      store = db.getObjects('B')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal(obj2)
-    })
+      let objects2 = db.getObjects('Object2')
+      expect(objects2).to.be.not.undefined
+      expect(objects2.length).to.equal(2)
+      expect(objects2[0].id).to.equal('y')
+      expect(objects2[0].object1Id).to.equal(2)
+      expect(objects2[0].object1).to.equal(obj12)
+      expect(objects2[0].many).to.deep.equal([ many2 ])
+      expect(objects2[1].id).to.equal('x')
+      expect(objects2[1].object1Id).to.equal(1)
+      expect(objects2[1].object1).to.equal(obj11)
+      expect(objects2[1].many).to.deep.equal([ many1 ])
 
-    it('should handle circular references of with a class in between', function() {
-      let db = new ObjectDb
-
-      class A { constructor(public a?: any) {}}
-      class B { constructor(public b?: any) {}}
-      class C { constructor(public c?: any) {}}
-
-      let obj1 = new A
-      let obj2 = new B
-      let obj3 = new C
-
-      obj1.a = obj2
-      obj2.b = obj3
-      obj3.c = obj1
-
-      db.incorporate(obj1)
-
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal(obj1)
-
-      store = db.getObjects('B')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal(obj2)
-
-      store = db.getObjects('C')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal(obj3)
-    })
-
-    it('should use given idProps to avoid duplicate entries', function() {
-      let db = new ObjectDb
-      db.provideIdProps('A', ['id'])
-
-      let obj1 = { className: 'A', id: 1, a: 'a' }
-      let obj2 = { className: 'A', id: 1, a: 'b' }
-
-      db.incorporate([ obj1, obj2 ])
-
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal(obj1)
-    })
-
-    it('should use given idProps and replace the duplicate objects with the one', function() {
-      let db = new ObjectDb
-      db.provideIdProps('A', ['id'])
-      db.provideIdProps('B', ['id'])
-
-      let b1 = { className: 'B', id: 1, b: 1 }
-      let b2 = { className: 'B', id: 1, b: 2 }
-      let obj1 = { className: 'A', id: 1, a: b1 }
-      let obj2 = { className: 'A', id: 2, a: b2 }
-
-      db.incorporate([ obj1, obj2 ])
-
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(2)
-      expect(store[0]).to.deep.equal({ className: 'A', id: 1, a: b1 })
-      expect(store[1]).to.deep.equal({ className: 'A', id: 2, a: b1 })
-
-      store = db.getObjects('B')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal(b1)
-    })    
-
-    it('should use given idProps and replace the duplicate objects with the one inside arrays', function() {
-      let db = new ObjectDb
-      db.provideIdProps('A', ['id'])
-      db.provideIdProps('B', ['id'])
-
-      let b1 = { className: 'B', id: 1, b: 1 }
-      let b2 = { className: 'B', id: 1, b: 2 }
-      let obj1 = { className: 'A', id: 1, a: [ b1 ]}
-      let obj2 = { className: 'A', id: 2, a: [ b2 ]}
-
-      db.incorporate([ obj1, obj2 ])
-
-      let store = db.getObjects('A')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(2)
-      expect(store[0]).to.deep.equal({ className: 'A', id: 1, a: [ b1 ]})
-      expect(store[1]).to.deep.equal({ className: 'A', id: 2, a: [ b1 ]})
-
-      store = db.getObjects('B')
-      expect(store).to.be.not.undefined
-      expect(store.length).to.equal(1)
-      expect(store[0]).to.deep.equal(b1)
-    })    
-  })
-
-  describe('create', function() {
-    it('should create an entity', async function() {
-      let db = new ObjectDb
-      db.create('TestClass', { a: 'a' })
-      let store = db.getObjects('TestClass')
-      expect(store.length).to.equal(1)
+      let objectManies = db.getObjects('ManyObject')
+      expect(objectManies).to.be.not.undefined
+      expect(objectManies.length).to.equal(2)
+      expect(objectManies[0].object1Id).to.equal(1)
+      expect(objectManies[0].object2Id).to.equal('x')
+      expect(objectManies[0].object1).to.equal(obj11)
+      expect(objectManies[0].object2).to.equal(obj21)
+      expect(objectManies[0].object12).to.equal(obj11)
+      expect(objectManies[1].object1Id).to.equal(1)
+      expect(objectManies[1].object2Id).to.equal('y')
+      expect(objectManies[1].object1).to.equal(obj11)
+      expect(objectManies[1].object2).to.equal(obj22)
+      expect(objectManies[1].object12).to.equal(obj12)
     })
   })
 
   describe('select', function() {
     it('should find all entities with certain criteria', async function() {
-      let db = new ObjectDb
+      let db = new ObjectDb(schema)
 
-      db.create('TestClass', { a: 'a', b: 1 })
-      db.create('TestClass', { a: 'b', b: 1 })
-      db.create('TestClass', { a: 'a', b: 2 })
-      db.create('TestClass', { a: 'b', b: 2 })
+      db.create('Object1', { id: 1, a: 'a', b: 1 })
+      db.create('Object1', { id: 2, a: 'b', b: 1 })
+      db.create('Object1', { id: 3, a: 'a', b: 2 })
+      db.create('Object1', { id: 4, a: 'b', b: 2 })
 
-      let result: any[] = db.read('TestClass', { a: ['a', 'b'], b: 1 })
+      let result: any[] = db.read('Object1', { a: ['a', 'b'], b: 1 })
 
       expect(result.length).to.equal(2)
       expect(result[0].a).to.equal('a')
@@ -382,68 +288,61 @@ describe('ObjectDb', function() {
     })
   })
 
-  describe('update', function() {
-    it('should update all entities with certain criteria', async function() {
-      let db = new ObjectDb
-
-      let obj1 = { a: 'a', b: 1 }
-      let obj2 = { a: 'b', b: 1 }
-      let obj3 = { a: 'a', b: 2 }
-      let obj4 = { a: 'b', b: 2 }
-
-      db.create('TestClass', obj1)
-      db.create('TestClass', obj2)
-      db.create('TestClass', obj3)
-      db.create('TestClass', obj4)
-
-      let result: any[] = db.update('TestClass', { a: ['a', 'b'], b: 1, '@set': { a: 'c', b: 3 }})
-
-      expect(result.length).to.equal(2)
-      expect(result[0].a).to.equal('c')
-      expect(result[0].b).to.equal(3)
-      expect(result[1].a).to.equal('c')
-      expect(result[1].b).to.equal(3)
-
-      expect(obj1.a).to.equal('c')
-      expect(obj1.b).to.equal(3)
-      expect(obj2.a).to.equal('c')
-      expect(obj2.b).to.equal(3)
-      expect(obj3.a).to.equal('a')
-      expect(obj3.b).to.equal(2)
-      expect(obj4.a).to.equal('b')
-      expect(obj4.b).to.equal(2)
-    })
-  })
-
-  describe('delete', function() {
-    it('should delete all entities with certain criteria', async function() {
-      let db = new ObjectDb
-
-      db.create('TestClass', { a: 'a', b: 1 })
-      db.create('TestClass', { a: 'b', b: 1 })
-      db.create('TestClass', { a: 'a', b: 2 })
-      db.create('TestClass', { a: 'b', b: 2 })
-
-      let result: any[] = db.delete('TestClass', { a: ['a', 'b'], b: 1 })
-
-      expect(result.length).to.equal(2)
-      expect(result[0].a).to.equal('a')
-      expect(result[0].b).to.equal(1)
-      expect(result[1].a).to.equal('b')
-      expect(result[1].b).to.equal(1)
-
-      let readResult: any[] = db.read('TestClass')
+  describe('wireObject', function() {
+    it('should wire nothing if there is nothing to wire', function() {
+      let db = new ObjectDb(schema)
+      let obj = new Object1(1, 'a', 1, null)
       
-      expect(readResult.length).to.equal(2)
-      expect(readResult[0].a).to.equal('a')
-      expect(readResult[0].b).to.equal(2)
-      expect(readResult[1].a).to.equal('b')
-      expect(readResult[1].b).to.equal(2)
+      let changes = db.wire(obj)
+
+      expect(changes.changes).to.be.empty
+      expect(obj).to.deep.equal(new Object1(1, 'a', 1, null))
+    })
+
+    it('should wire a many-to-one along with its one-to-many', function() {
+      let db = new ObjectDb(schema)
+      let obj1 = new Object1(1)
+      let obj2 = new Object2('x')
+
+      db.create([ obj1, obj2 ])
+
+      let many = new ManyObject(1, 'x', 'a')
+
+      let changes = db.wire(many)
+
+      expect(changes.changes.length).to.equal(3)
+      expect(changes.changes).to.deep.equal([
+        new Change(many, { method: 'update', props: ['object1', 'object2'] }),
+        new Change(obj1, { method: 'update', props: ['many'] }),
+        new Change(obj2, { method: 'update', props: ['many'] })
+      ])
+
+      expect(obj1.many!.length).to.equal(1)
+      expect(obj1.many![0]).to.equal(many)
+
+      expect(obj2.many!.length).to.equal(1)
+      expect(obj2.many![0]).to.equal(many)
+
+      expect(many.object1).to.equal(obj1)
+      expect(many.object2).to.equal(obj2)
+    })
+
+    it('should wire a one-to-one', function() {
+      let db = new ObjectDb(schema)
+      let obj1 = new Object1(1, 'a', 1, null, null)
+      db.create(obj1)
+
+      let obj2 = new Object1(2, 'b', 2, 1, null)
+      
+      let changes = db.wire(obj2)
+
+      expect(changes.changes).to.deep.equal([
+        new Change(obj2, { method: 'update', props: [ 'object1' ] }),
+        new Change(obj1, { method: 'update', props: [ 'object1Id', 'object1' ] })
+      ])
+
+      expect(obj2.object1Id).to.equal(1)
+      expect(obj2.object1).to.equal(obj1)
     })
   })
 })
-
-class SimpleClass {
-  className?: string
-  constructor(public a: string, public b: number) {}
-}
