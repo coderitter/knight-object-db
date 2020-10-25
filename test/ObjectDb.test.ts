@@ -288,7 +288,305 @@ describe('ObjectDb', function() {
     })
   })
 
-  describe('wireObject', function() {
+  describe('delete', function() {
+    it('should delete a simple class', function() {
+      let db = new ObjectDb(schema)
+      let obj = new Object1(1, 'a', 1, null, null)
+      db.create(obj)
+
+      let changes = db.delete(new Object1(1))
+
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(obj, 'delete'))
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.empty
+    })
+
+    it('should delete a simple class given as a plain object', function() {
+      let db = new ObjectDb(schema)
+      let obj = new Object1(1, 'a', 1, null, null)
+      db.create(obj)
+
+      let changes = db.delete('Object1', obj)
+
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(Object1, obj, 'delete'))
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.empty
+    })
+
+    it('should delete a list of simple objects', function() {
+      let db = new ObjectDb(schema)
+      
+      let objs = [
+        new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3)
+      ]
+
+      db.create('Object1', objs)
+
+      let changes = db.delete('Object1', [ new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3) ])
+
+      expect(changes.changes.length).to.equal(3)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(objs[0], 'delete'))
+      expect(changes.changes[1]).to.deep.equal(
+        new Change(objs[1], 'delete'))
+      expect(changes.changes[2]).to.deep.equal(
+        new Change(objs[2], 'delete'))
+      
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.empty
+    })
+
+    it('should delete a list of simple objects given as plain objects', function() {
+      let db = new ObjectDb(schema)
+      
+      let objs = [
+        new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3)
+      ]
+
+      db.create('Object1', objs)
+
+      let changes = db.delete([ new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3) ])
+
+      expect(changes.changes.length).to.equal(3)
+      expect(changes.changes).to.deep.equal([
+        new Change('Object1', objs[0], 'delete'), new Change('Object1', objs[1], 'delete'), new Change('Object1', objs[2], 'delete')
+      ])
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.empty
+    })
+
+    it('should delete a list of mixed simple objects', function() {
+      let db = new ObjectDb(schema)
+      
+      let objs = [
+        new Object1(1, 'a', 1), new Object2('x', 'b')
+      ]
+
+      db.create(objs)
+
+      let changes = db.delete([ new Object1(1, 'a', 1), new Object2('x', 'b') ])
+
+      expect(changes.changes.length).to.equal(2)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(objs[0], 'delete'))
+      expect(changes.changes[1]).to.deep.equal(
+        new Change(objs[1], 'delete'))
+
+      let objects1 = db.getObjects('Object1')
+      expect(objects1).to.be.empty
+
+      let objects2 = db.getObjects('Object2')
+      expect(objects2).to.be.empty
+    })
+
+    it('should not get into cycles', function() {
+      let db = new ObjectDb(schema)
+      let obj1 = new Object1(1, 'a', 1, 1)
+      obj1.object1 = obj1
+      db.create(obj1)
+
+      let changes = db.delete(obj1)
+
+      expect(changes.changes).to.deep.equal([
+        new Change(obj1, [ 'delete' ])
+      ])
+
+      let objects1 = db.getObjects('Object1')
+      expect(objects1).to.be.empty
+    })
+
+    it('should delete multiple objects referencing each other but are not wired', function() {
+      let db = new ObjectDb(schema)
+
+      let obj11 = new Object1(1, 'a', 1, 2, 'x')
+      let obj12 = new Object1(2, 'b', 2, 1, 'y')
+      let obj21 = new Object2('x', 'c')
+      let obj22 = new Object2('y', 'd')
+      let many1 = new ManyObject(1, 'x', 'e', 1)
+      let many2 = new ManyObject(1, 'y', 'f', 2)
+
+      db.create([ obj11, obj12, obj21, obj22, many1, many2 ])
+
+      let changes = db.delete([ new Object1(1, 'a', 1, 2, 'x'), new Object1(2, 'b', 2, 1, 'y'), new Object2('x', 'c'), new Object2('y', 'd'), new ManyObject(1, 'x', 'e', 1), new ManyObject(1, 'y', 'f', 2) ])
+
+      expect(changes.changes.length).to.equal(6)
+      expect(changes.changes).deep.equal([
+        new Change(obj11, ['delete']),
+        new Change(obj12, ['delete']),
+        new Change(obj21, ['delete']),
+        new Change(obj22, ['delete']),
+        new Change(many1, ['delete']),
+        new Change(many2, ['delete'])
+      ])
+
+      expect(obj11.object1).to.be.null
+      expect(obj11.object2).to.be.null
+      expect(obj11.many).to.be.empty
+      expect(obj12.object1).to.be.null
+      expect(obj12.object2).to.be.null
+      expect(obj12.many).to.be.undefined
+      expect(obj21.object1).to.be.null
+      expect(obj21.many).to.be.empty
+      expect(obj22.object1).to.be.null
+      expect(obj22.many).to.be.empty
+      expect(many1.object1).to.be.null
+      expect(many1.object2).to.be.null
+      expect(many1.object12).to.be.null
+      expect(many2.object1).to.be.null
+      expect(many2.object2).to.be.null
+      expect(many2.object12).to.be.null
+
+      let objects1 = db.getObjects('Object1')
+      expect(objects1).to.be.empty
+
+      let objects2 = db.getObjects('Object2')
+      expect(objects2).to.be.empty
+
+      let objectManies = db.getObjects('ManyObject')
+      expect(objectManies).to.be.empty
+    })
+
+    it('should delete an object with multiple relationships', function() {
+      let db = new ObjectDb(schema)
+
+      let obj11 = new Object1(1, 'a', 1, 2, 'x')
+      let obj12 = new Object1(2, 'b', 2, undefined, 'y')
+      let obj21 = new Object2('x', 'c')
+      let obj22 = new Object2('y', 'd')
+      let many1 = new ManyObject(1, 'x', 'e', 1)
+      let many2 = new ManyObject(1, 'y', 'f', 2)
+
+      obj11.object1 = obj12
+      obj11.object2 = obj21
+      obj11.many = [ many1, many2 ]
+      many2.object2 = obj22
+
+      db.create(obj11)
+
+      let delObj11 = new Object1(1, 'a', 1, 2, 'x')
+      let delObj22 = new Object2('y', 'd')
+      let delMany1 = new ManyObject(1, 'x', 'e', 1)
+      let delMany2 = new ManyObject(1, 'y', 'f', 2)
+
+      delObj11.many = [ delMany1, delMany2 ]
+      delMany2.object2 = delObj22
+
+      let changes = db.delete(delObj11)
+
+      expect(changes.changes.length).to.equal(4)
+      expect(changes.changes).deep.equal([
+        new Change(obj11, ['delete']),
+        new Change(many1, ['delete']),
+        new Change(many2, ['delete']),
+        new Change(obj22, ['delete']),
+      ])
+
+      expect(obj11.object1).to.be.null
+      expect(obj11.object2).to.be.null
+      expect(obj11.many).to.be.empty
+      expect(obj12.object1).to.be.null
+      expect(obj12.object2).to.be.null
+      expect(obj12.many).to.be.undefined
+      expect(obj21.object1).to.be.null
+      expect(obj21.many).to.be.empty
+      expect(obj22.object1).to.be.null
+      expect(obj22.many).to.be.empty
+      expect(many1.object1).to.be.null
+      expect(many1.object2).to.be.null
+      expect(many1.object12).to.be.null
+      expect(many2.object1).to.be.null
+      expect(many2.object2).to.be.null
+      expect(many2.object12).to.be.null
+
+      let objects1 = db.getObjects('Object1')
+      expect(objects1.length).to.be.equal(1)
+      expect(objects1[0]).to.equal(obj12)
+
+      let objects2 = db.getObjects('Object2')
+      expect(objects2.length).to.be.equal(1)
+      expect(objects2[0]).to.equal(obj21)
+
+      let objectManies = db.getObjects('ManyObject')
+      expect(objectManies).to.be.empty
+    })
+
+    it('should delete an object and every relationship', function() {
+      let db = new ObjectDb(schema)
+
+      let obj11 = new Object1(1, 'a', 1, 2, 'x')
+      let obj12 = new Object1(2, 'b', 2, undefined, 'y')
+      let obj21 = new Object2('x', 'c')
+      let obj22 = new Object2('y', 'd')
+      let many1 = new ManyObject(1, 'x', 'e', 1)
+      let many2 = new ManyObject(1, 'y', 'f', 2)
+
+      obj11.object1 = obj12
+      obj11.object2 = obj21
+      obj11.many = [ many1, many2 ]
+      many2.object2 = obj22
+
+      db.create(obj11)
+
+      let delObj11 = new Object1(1, 'a', 1, 2, 'x')
+      let delObj12 = new Object1(2, 'b', 2, 1, 'y')
+      let delObj21 = new Object2('x', 'c')
+      let delObj22 = new Object2('y', 'd')
+      let delMany1 = new ManyObject(1, 'x', 'e', 1)
+      let delMany2 = new ManyObject(1, 'y', 'f', 2)
+
+      delObj11.object1 = delObj12
+      delObj11.object2 = delObj21
+      delObj11.many = [ delMany1, delMany2 ]
+      delMany2.object2 = delObj22
+
+      let changes = db.delete(delObj11)
+
+      expect(changes.changes.length).to.equal(6)
+      expect(changes.changes).deep.equal([
+        new Change(obj11, ['delete']),
+        new Change(many1, ['delete']),
+        new Change(many2, ['delete']),
+        new Change(obj22, ['delete']),
+        new Change(obj12, ['delete']),
+        new Change(obj21, ['delete']),
+      ])
+
+      expect(obj11.object1).to.be.null
+      expect(obj11.object2).to.be.null
+      expect(obj11.many).to.be.empty
+      expect(obj12.object1).to.be.null
+      expect(obj12.object2).to.be.null
+      expect(obj12.many).to.be.undefined
+      expect(obj21.object1).to.be.null
+      expect(obj21.many).to.be.empty
+      expect(obj22.object1).to.be.null
+      expect(obj22.many).to.be.empty
+      expect(many1.object1).to.be.null
+      expect(many1.object2).to.be.null
+      expect(many1.object12).to.be.null
+      expect(many2.object1).to.be.null
+      expect(many2.object2).to.be.null
+      expect(many2.object12).to.be.null
+
+      let objects1 = db.getObjects('Object1')
+      expect(objects1).to.be.empty
+
+      let objects2 = db.getObjects('Object2')
+      expect(objects2).to.be.empty
+
+      let objectManies = db.getObjects('ManyObject')
+      expect(objectManies).to.be.empty
+    })
+  })
+
+  describe('wire', function() {
     it('should wire nothing if there is nothing to wire', function() {
       let db = new ObjectDb(schema)
       let obj = new Object1(1, 'a', 1, null)
@@ -343,6 +641,61 @@ describe('ObjectDb', function() {
 
       expect(obj2.object1Id).to.equal(1)
       expect(obj2.object1).to.equal(obj1)
+    })
+  })
+
+  describe('unwire', function() {
+    it('should unwire nothing if there is nothing to unwire', function() {
+      let db = new ObjectDb(schema)
+      let obj = new Object1(1, 'a', 1, null)
+      
+      let changes = db.unwire(obj)
+
+      expect(changes.changes).to.be.empty
+      expect(obj).to.deep.equal(new Object1(1, 'a', 1, null))
+    })
+
+    it('should unwire a many-to-one along with its one-to-many', function() {
+      let db = new ObjectDb(schema)
+      let obj1 = new Object1(1)
+      let obj2 = new Object2('x')
+      let many = new ManyObject(1, 'x', 'a')
+
+      db.create([ obj1, obj2, many ])
+
+      let changes = db.unwire(many)
+
+      expect(changes.changes.length).to.equal(3)
+      expect(changes.changes).to.deep.equal([
+        new Change(obj1, { method: 'update', props: [ 'many' ] }),
+        new Change(obj2, { method: 'update', props: [ 'many' ] }),
+        new Change(many, { method: 'update', props: [ 'object1Id', 'object1', 'object2Id', 'object2' ] }),
+      ])
+
+      expect(obj1.many).to.be.empty
+      expect(obj2.many).to.be.empty
+      expect(many.object1).to.be.null
+      expect(many.object2).to.be.null
+    })
+
+    it('should unwire a one-to-one', function() {
+      let db = new ObjectDb(schema)
+      let obj1 = new Object1(1, 'a', 1, null, null)
+      let obj2 = new Object1(2, 'b', 2, 1, null)
+      
+      db.create([ obj1, obj2 ])
+      
+      let changes = db.unwire(obj2)
+
+      expect(changes.changes).to.deep.equal([
+        new Change(obj1, { method: 'update', props: [ 'object1Id', 'object1' ] }),
+        new Change(obj2, { method: 'update', props: [ 'object1Id', 'object1' ] }),
+      ])
+
+      expect(obj1.object1Id).to.be.null
+      expect(obj1.object1).to.be.null
+      expect(obj2.object1Id).to.be.null
+      expect(obj2.object1).to.be.null
     })
   })
 })

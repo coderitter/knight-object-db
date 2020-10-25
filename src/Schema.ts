@@ -36,7 +36,22 @@ export function idAndRelationshipIdPropNames(schema: Schema, entityName: string)
   return props
 }
 
-export function idAndRelationshipIdProps(schema: Schema, entityName: string, object: any) {
+export function idProps(schema: Schema, entityName: string, object: any) {
+  let entity = schema[entityName]
+  if (entity == undefined) {
+    throw new Error(`Entity '${entityName} not contained in schema`)
+  }
+
+  let newObject: any = {}
+
+  for (let prop of entity.idProps) {
+    newObject[prop] = object[prop]
+  }
+
+  return newObject
+}
+
+export function idAndRelationshipProps(schema: Schema, entityName: string, object: any) {
   let props = idAndRelationshipIdPropNames(schema, entityName)
   let newObject: any = {}
 
