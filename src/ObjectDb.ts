@@ -547,35 +547,6 @@ export default class ObjectDb {
           else {
             l.debug('Relationship is already set')
           }
-
-          if (relationship.otherRelationship != undefined) {
-            let otherEntity = this.schema[relationship.otherEntity]
-            if (otherEntity == undefined) {
-              throw new Error(`Entity '${entityName}' not contained in schema`)
-            }
-
-            if (otherEntity.relationships == undefined || otherEntity.relationships[relationship.otherRelationship] == undefined) {
-              throw new Error(`Relationship '${relationship.otherRelationship} not contained in entity '${relationship.otherEntity}'`)
-            }
-
-            let otherRelationship = otherEntity.relationships[relationship.otherRelationship]
-
-            l.debug('Relationship is also one-to-one')
-            l.var('otherRelationship', otherRelationship)
-
-            if (relationshipObjects[0][otherRelationship.thisId] !== object[otherRelationship.otherId] || relationshipObjects[0][relationship.otherRelationship] !== object) {
-              l.debug('Setting id and object on the other side of the one-to-one... ' + otherRelationship.thisId + ' = ' + object[otherRelationship.otherId])
-              relationshipObjects[0][otherRelationship.thisId] = object[otherRelationship.otherId]
-              relationshipObjects[0][relationship.otherRelationship] = object
-  
-              let change = new Change(relationshipObjects[0], { method: 'update', props: [ otherRelationship.thisId, relationship.otherRelationship ] })
-              l.debug('Adding change to list of changes...', change)
-              changes.add(change)  
-            }
-            else {
-              l.debug('Id and object on the other side of the one-to-one already set... ')
-            }
-          }
         }
         else if (relationship.oneToMany === true) {
           l.debug('Relationship is one-to-many', object[relationshipName])
@@ -853,34 +824,6 @@ export default class ObjectDb {
           }
           else {
             l.debug('Relationship is already unset')
-          }
-
-          if (relationship.otherRelationship != undefined && relationshipObjects.length == 1) {
-            let otherEntity = this.schema[relationship.otherEntity]
-            if (otherEntity == undefined) {
-              throw new Error(`Entity '${entityName}' not contained in schema`)
-            }
-
-            if (otherEntity.relationships == undefined || otherEntity.relationships[relationship.otherRelationship] == undefined) {
-              throw new Error(`Relationship '${relationship.otherRelationship} not contained in entity '${relationship.otherEntity}'`)
-            }
-
-            let otherRelationship = otherEntity.relationships[relationship.otherRelationship]
-
-            l.debug('Relationship is also one-to-one')
-            l.var('otherRelationship', otherRelationship)
-
-            if (relationshipObjects[0][otherRelationship.thisId] != null || relationshipObjects[0][relationship.otherRelationship] != null) {
-              l.debug('Unsetting id and object on the other side of the one-to-one... ' + otherRelationship.thisId + ' = null')
-              relationshipObjects[0][relationship.otherRelationship] = null
-  
-              let change = new Change(relationshipObjects[0], { method: 'update', props: [ relationship.otherRelationship ] })
-              l.debug('Adding change to list of changes...', change)
-              changes.add(change)  
-            }
-            else {
-              l.debug('Id and object on the other side of the one-to-one already unset...')
-            }
           }
         }
         else if (relationship.oneToMany === true) {

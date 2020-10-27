@@ -15,7 +15,6 @@ export interface Relationship {
   thisId: string
   otherEntity: string
   otherId: string
-  otherRelationship?: string
 }
 
 export function idAndRelationshipIdPropNames(schema: Schema, entityName: string): string[] {

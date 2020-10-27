@@ -155,8 +155,8 @@ describe('ObjectDb', function() {
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
       let obj12 = new Object1(2, 'b', 2, 1, 'y')
-      let obj21 = new Object2('x', 'c')
-      let obj22 = new Object2('y', 'd')
+      let obj21 = new Object2('x', 'c', 1)
+      let obj22 = new Object2('y', 'd', 2)
       let many1 = new ManyObject(1, 'x', 'e', 1)
       let many2 = new ManyObject(1, 'y', 'f', 2)
 
@@ -206,9 +206,9 @@ describe('ObjectDb', function() {
       let db = new ObjectDb(schema)
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
-      let obj12 = new Object1(2, 'b', 2, undefined, 'y')
-      let obj21 = new Object2('x', 'c')
-      let obj22 = new Object2('y', 'd')
+      let obj12 = new Object1(2, 'b', 2, 1, 'y')
+      let obj21 = new Object2('x', 'c', 1)
+      let obj22 = new Object2('y', 'd', 2)
       let many1 = new ManyObject(1, 'x', 'e', 1)
       let many2 = new ManyObject(1, 'y', 'f', 2)
 
@@ -407,8 +407,8 @@ describe('ObjectDb', function() {
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
       let obj12 = new Object1(2, 'b', 2, 1, 'y')
-      let obj21 = new Object2('x', 'c')
-      let obj22 = new Object2('y', 'd')
+      let obj21 = new Object2('x', 'c', 1)
+      let obj22 = new Object2('y', 'd', 2)
       let many1 = new ManyObject(1, 'x', 'e', 1)
       let many2 = new ManyObject(1, 'y', 'f', 2)
 
@@ -457,9 +457,9 @@ describe('ObjectDb', function() {
       let db = new ObjectDb(schema)
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
-      let obj12 = new Object1(2, 'b', 2, undefined, 'y')
-      let obj21 = new Object2('x', 'c')
-      let obj22 = new Object2('y', 'd')
+      let obj12 = new Object1(2, 'b', 2, 1, 'y')
+      let obj21 = new Object2('x', 'c', 1)
+      let obj22 = new Object2('y', 'd', 2)
       let many1 = new ManyObject(1, 'x', 'e', 1)
       let many2 = new ManyObject(1, 'y', 'f', 2)
 
@@ -521,9 +521,9 @@ describe('ObjectDb', function() {
       let db = new ObjectDb(schema)
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
-      let obj12 = new Object1(2, 'b', 2, undefined, 'y')
-      let obj21 = new Object2('x', 'c')
-      let obj22 = new Object2('y', 'd')
+      let obj12 = new Object1(2, 'b', 2, 1, 'y')
+      let obj21 = new Object2('x', 'c', 1)
+      let obj22 = new Object2('y', 'd', 2)
       let many1 = new ManyObject(1, 'x', 'e', 1)
       let many2 = new ManyObject(1, 'y', 'f', 2)
 
@@ -627,7 +627,7 @@ describe('ObjectDb', function() {
 
     it('should wire a one-to-one', function() {
       let db = new ObjectDb(schema)
-      let obj1 = new Object1(1, 'a', 1, null, null)
+      let obj1 = new Object1(1, 'a', 1, 2, null)
       db.create(obj1)
 
       let obj2 = new Object1(2, 'b', 2, 1, null)
@@ -636,7 +636,7 @@ describe('ObjectDb', function() {
 
       expect(changes.changes).to.deep.equal([
         new Change(obj2, { method: 'update', props: [ 'object1' ] }),
-        new Change(obj1, { method: 'update', props: [ 'object1Id', 'object1' ] })
+        new Change(obj1, { method: 'update', props: [ 'object1' ] })
       ])
 
       expect(obj2.object1Id).to.equal(1)
