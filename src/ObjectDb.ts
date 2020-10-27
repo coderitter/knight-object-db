@@ -294,7 +294,7 @@ export default class ObjectDb {
     let index = objects.indexOf(toDelete)
     objects.splice(index, 1)
 
-    let change = new Change(toDelete, ['delete'])
+    let change = new Change(toDelete, [ 'delete' ])
     changes.add(change)
 
     if (entity.relationships != undefined) {
@@ -422,7 +422,7 @@ export default class ObjectDb {
     l.varInsane('index', index)
     objects.splice(index, 1)
 
-    let change = new Change(toDelete, ['delete'])
+    let change = new Change(toDelete, [ 'delete' ])
     l.debug('Adding change to list of changes...', change)
     changes.add(change)
 
@@ -779,10 +779,9 @@ export default class ObjectDb {
 
               if (otherRelationship.manyToOne === true) {
                 l.debug('Unsetting other object\'s many-to-one relationship... ' + otherRelationshipName)
-                otherObject[otherRelationship.thisId] = null
                 otherObject[otherRelationshipName] = null
 
-                let change = new Change(otherObject, { method: 'update', props: [ otherRelationship.thisId, otherRelationshipName ]})
+                let change = new Change(otherObject, { method: 'update', props: [ otherRelationshipName ]})
                 l.debug('Adding change to list of changes...', change)
                 changes.add(change)
               }
@@ -846,10 +845,9 @@ export default class ObjectDb {
 
           if (object[relationship.thisId] != null || object[relationshipName] != null) {
             l.debug('Unsetting relationship object on many-to-one... ' + relationship.thisId + ' = null')
-            object[relationship.thisId] = null
             object[relationshipName] = null
   
-            let change = new Change(object, { method: 'update', props: [ relationship.thisId, relationshipName ]})
+            let change = new Change(object, { method: 'update', props: [ relationshipName ]})
             l.debug('Adding change to list of changes...', change)
             changes.add(change)
           }
@@ -874,10 +872,9 @@ export default class ObjectDb {
 
             if (relationshipObjects[0][otherRelationship.thisId] != null || relationshipObjects[0][relationship.otherRelationship] != null) {
               l.debug('Unsetting id and object on the other side of the one-to-one... ' + otherRelationship.thisId + ' = null')
-              relationshipObjects[0][otherRelationship.thisId] = null
               relationshipObjects[0][relationship.otherRelationship] = null
   
-              let change = new Change(relationshipObjects[0], { method: 'update', props: [ otherRelationship.thisId, relationship.otherRelationship ] })
+              let change = new Change(relationshipObjects[0], { method: 'update', props: [ relationship.otherRelationship ] })
               l.debug('Adding change to list of changes...', change)
               changes.add(change)  
             }

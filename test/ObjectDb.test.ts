@@ -669,7 +669,7 @@ describe('ObjectDb', function() {
       expect(changes.changes).to.deep.equal([
         new Change(obj1, { method: 'update', props: [ 'many' ] }),
         new Change(obj2, { method: 'update', props: [ 'many' ] }),
-        new Change(many, { method: 'update', props: [ 'object1Id', 'object1', 'object2Id', 'object2' ] }),
+        new Change(many, { method: 'update', props: [ 'object1', 'object2' ] }),
       ])
 
       expect(obj1.many).to.be.empty
@@ -680,7 +680,7 @@ describe('ObjectDb', function() {
 
     it('should unwire a one-to-one', function() {
       let db = new ObjectDb(schema)
-      let obj1 = new Object1(1, 'a', 1, null, null)
+      let obj1 = new Object1(1, 'a', 1, 2, null)
       let obj2 = new Object1(2, 'b', 2, 1, null)
       
       db.create([ obj1, obj2 ])
@@ -688,13 +688,13 @@ describe('ObjectDb', function() {
       let changes = db.unwire(obj2)
 
       expect(changes.changes).to.deep.equal([
-        new Change(obj1, { method: 'update', props: [ 'object1Id', 'object1' ] }),
-        new Change(obj2, { method: 'update', props: [ 'object1Id', 'object1' ] }),
+        new Change(obj1, { method: 'update', props: [ 'object1' ] }),
+        new Change(obj2, { method: 'update', props: [ 'object1' ] }),
       ])
 
-      expect(obj1.object1Id).to.be.null
+      expect(obj1.object1Id).to.equal(2)
       expect(obj1.object1).to.be.null
-      expect(obj2.object1Id).to.be.null
+      expect(obj2.object1Id).to.equal(1)
       expect(obj2.object1).to.be.null
     })
   })
