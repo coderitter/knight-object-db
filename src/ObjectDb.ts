@@ -62,12 +62,12 @@ export default class ObjectDb {
     return objects
   }
 
-  create(entityName: string, object: any, changes?: Changes): Changes
-  create(classFunction: { new(): any }, object: any, changes?: Changes): Changes
-  create(object: any, changes?: Changes): Changes
+  integrate(entityName: string, object: any, changes?: Changes): Changes
+  integrate(classFunction: { new(): any }, object: any, changes?: Changes): Changes
+  integrate(object: any, changes?: Changes): Changes
 
-  create(arg1: any, arg2?: any, arg3?: any): Changes {
-    let l = log.mt('create')
+  integrate(arg1: any, arg2?: any, arg3?: any): Changes {
+    let l = log.mt('integrate')
 
     let entityName
     let object
@@ -99,16 +99,16 @@ export default class ObjectDb {
     l.param('changes', changes)
 
     if (object instanceof Array) {
-      l.debug('Given object is an array. Creating every object of that array...')
+      l.debug('Given object is an array. Integrating every object of that array...')
 
       for (let obj of object) {
         l.var('obj', obj)
         l.debug('Going into recursion...')
         if (entityName != undefined) {
-          this.create(entityName, obj, changes)
+          this.integrate(entityName, obj, changes)
         }
         else {
-          this.create(obj, changes)
+          this.integrate(obj, changes)
         }
         l.returning('Returning from recursion...')
       }
@@ -170,7 +170,7 @@ export default class ObjectDb {
       }
     }
 
-    l.debug('Pushing object into objects...')
+    l.debug('Adding object to database...')
     objects.push(object)
     let change = new Change(entityName, object, 'create')
     
@@ -187,8 +187,8 @@ export default class ObjectDb {
         }
 
         let relationship = entity.relationships[relationshipName]
-        l.debug(`Creating relationship '${relationshipName}'. Going into recursion...`)
-        this.create(relationship.otherEntity, object[relationshipName], changes)
+        l.debug(`Integrating relationship '${relationshipName}'. Going into recursion...`)
+        this.integrate(relationship.otherEntity, object[relationshipName], changes)
         l.returning('Returning from recursion...')
       }
     }
@@ -302,11 +302,11 @@ export default class ObjectDb {
         let relationship = entity.relationships[relationshipName]
 
         if (relationship.manyToOne === true && typeof object[relationshipName] == 'object' && object[relationshipName] !== null) {
-          this.delete(relationship.otherEntity, object[relationshipName])
+          this.remove(relationship.otherEntity, object[relationshipName])
         }
         else if (relationship.oneToMany === true && object[relationshipName] instanceof Array && object[relationshipName].length > 0) {
           for (let relationshipObject of object[relationshipName]) {
-            this.delete(relationship.otherEntity, relationshipObject)
+            this.remove(relationship.otherEntity, relationshipObject)
           }
         }
       }
@@ -315,12 +315,12 @@ export default class ObjectDb {
     return changes
   }
 
-  delete(entityName: string, object: any, changes?: Changes): Changes
-  delete(classFunction: { new(): any }, object: any, changes?: Changes): Changes
-  delete(object: any, changes?: Changes): Changes
+  remove(entityName: string, object: any, changes?: Changes): Changes
+  remove(classFunction: { new(): any }, object: any, changes?: Changes): Changes
+  remove(object: any, changes?: Changes): Changes
 
-  delete(arg1: any, arg2?: any, arg3?: any): Changes {
-    let l = log.mt('delete')
+  remove(arg1: any, arg2?: any, arg3?: any): Changes {
+    let l = log.mt('remove')
 
     let entityName
     let object
@@ -354,16 +354,16 @@ export default class ObjectDb {
     l.param('changes', changes)
 
     if (object instanceof Array) {
-      l.debug('Given object is an array. Deleting every object of that array...')
+      l.debug('Given object is an array. Removing every object of that array...')
 
       for (let obj of object) {
         l.var('obj', obj)
         l.debug('Going into recursion...')
         if (entityName != undefined) {
-          this.delete(entityName, obj, changes)
+          this.remove(entityName, obj, changes)
         }
         else {
-          this.delete(obj, changes)
+          this.remove(obj, changes)
         }
         l.returning('Returning from recursion...')
       }
@@ -397,7 +397,7 @@ export default class ObjectDb {
       return changes
     }
 
-    l.debug('Determing object to delete...')
+    l.debug('Determing object to remove...')
 
     let criteria = idProps(this.schema, entityName, object)
     l.varInsane('criteria', criteria)
@@ -406,7 +406,7 @@ export default class ObjectDb {
     l.varInsane('objects', objectsToDelete)
 
     if (objectsToDelete.length == 0) {
-      l.returning('No object to delete could be determined. Returning changes...', changes)
+      l.returning('No object to remove could be determined. Returning changes...', changes)
       return changes
     }
 
@@ -416,7 +416,7 @@ export default class ObjectDb {
 
     let toDelete = objectsToDelete[0]
 
-    l.debug('Removing object to delete from database...')
+    l.debug('Removing object from database...')
     let objects = this.getObjects(entityName)
     let index = objects.indexOf(toDelete)
     l.varInsane('index', index)
@@ -426,7 +426,7 @@ export default class ObjectDb {
     l.debug('Adding change to list of changes...', change)
     changes.add(change)
 
-    l.debug('Going through all given relationships and deleting them too...')
+    l.debug('Going through all given relationships and removing them too...')
 
     if (entity.relationships != undefined) {
       for (let relationshipName of Object.keys(entity.relationships)) {
@@ -435,14 +435,14 @@ export default class ObjectDb {
         let relationship = entity.relationships[relationshipName]
 
         if (relationship.manyToOne === true && typeof object[relationshipName] == 'object' && object[relationshipName] !== null) {
-          l.debug('Deleting many-to-one relationship. Going into recursion...')
-          this.delete(relationship.otherEntity, object[relationshipName], changes)
+          l.debug('Removing many-to-one relationship. Going into recursion...')
+          this.remove(relationship.otherEntity, object[relationshipName], changes)
           l.returning('Returning from recursion...')
         }
         else if (relationship.oneToMany === true && object[relationshipName] instanceof Array && object[relationshipName].length > 0) {
           for (let relationshipObject of object[relationshipName]) {
-            l.debug('Deleting object of one-to-many relationship. Going into recursion...')
-            this.delete(relationship.otherEntity, relationshipObject, changes)
+            l.debug('Removing object of one-to-many relationship. Going into recursion...')
+            this.remove(relationship.otherEntity, relationshipObject, changes)
             l.returning('Returning from recursion...')
           }
         }

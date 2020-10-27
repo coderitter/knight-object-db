@@ -5,8 +5,8 @@ import { ObjectDb } from '../src'
 import { ManyObject, Object1, Object2, schema } from './TestSchema'
 
 describe('ObjectDb', function() {
-  describe('create', function() {
-    it('should create a simple class', function() {
+  describe('integrate', function() {
+    it('should add a simple class', function() {
       let db = new ObjectDb(schema)
       
       let obj = new Object1
@@ -16,7 +16,7 @@ describe('ObjectDb', function() {
       obj.object1Id = null
       obj.object2Id = null
       
-      let changes = db.create(obj)
+      let changes = db.integrate(obj)
 
       expect(changes.changes.length).to.equal(1)
       expect(changes.changes[0]).to.deep.equal(
@@ -28,7 +28,7 @@ describe('ObjectDb', function() {
       expect(objects[0]).to.equal(obj)
     })
 
-    it('should create a simple class given as a plain object', function() {
+    it('should add a simple class given as a plain object', function() {
       let db = new ObjectDb(schema)
       
       let obj = {
@@ -39,7 +39,7 @@ describe('ObjectDb', function() {
         object2Id: null
       }
 
-      let changes = db.create('Object1', obj)
+      let changes = db.integrate('Object1', obj)
 
       expect(changes.changes.length).to.equal(1)
       expect(changes.changes[0]).to.deep.equal(
@@ -51,14 +51,14 @@ describe('ObjectDb', function() {
       expect(objects[0]).to.equal(obj)
     })
 
-    it('should create a list of simple objects', function() {
+    it('should add a list of simple objects', function() {
       let db = new ObjectDb(schema)
       
       let objs = [
         new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3)
       ]
 
-      let changes = db.create('Object1', objs)
+      let changes = db.integrate('Object1', objs)
 
       expect(changes.changes.length).to.equal(3)
       expect(changes.changes[0]).to.deep.equal(
@@ -76,7 +76,7 @@ describe('ObjectDb', function() {
       expect(objects[2]).to.equal(objs[2])
     })
 
-    it('should create a list of simple objects given as plain objects', function() {
+    it('should add a list of simple objects given as plain objects', function() {
       let db = new ObjectDb(schema)
       
       let objs = [
@@ -97,7 +97,7 @@ describe('ObjectDb', function() {
         }
       ]
 
-      let changes = db.create('Object1', objs)
+      let changes = db.integrate('Object1', objs)
 
       expect(changes.changes.length).to.equal(3)
       expect(changes.changes).to.deep.equal([
@@ -112,14 +112,14 @@ describe('ObjectDb', function() {
       expect(objects[2]).to.equal(objs[2])
     })
 
-    it('should create a list of mixed simple objects', function() {
+    it('should add a list of mixed simple objects', function() {
       let db = new ObjectDb(schema)
       
       let objs = [
         new Object1(1, 'a', 1), new Object2('x', 'b')
       ]
 
-      let changes = db.create(objs)
+      let changes = db.integrate(objs)
 
       expect(changes.changes.length).to.equal(2)
       expect(changes.changes[0]).to.deep.equal(
@@ -143,14 +143,14 @@ describe('ObjectDb', function() {
       let obj1 = new Object1(1, 'a', 1, 1)
       obj1.object1 = obj1
 
-      let changes = db.create(obj1)
+      let changes = db.integrate(obj1)
 
       expect(changes.changes).to.deep.equal([
         new Change(obj1, [ 'create' ])
       ])
     })
 
-    it('should create multiple objects referencing each other but are not wired', function() {
+    it('should add multiple objects referencing each other but are not wired', function() {
       let db = new ObjectDb(schema)
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
@@ -160,7 +160,7 @@ describe('ObjectDb', function() {
       let many1 = new ManyObject(1, 'x', 'e', 1)
       let many2 = new ManyObject(1, 'y', 'f', 2)
 
-      let changes = db.create([ obj11, obj12, obj21, obj22, many1, many2 ])
+      let changes = db.integrate([ obj11, obj12, obj21, obj22, many1, many2 ])
 
       expect(changes.changes.length).to.equal(6)
       expect(changes.changes).deep.equal([
@@ -202,7 +202,7 @@ describe('ObjectDb', function() {
       expect(objectManies[1].object12).to.equal(obj12)
     })
 
-    it('should create an object with multiple relationships', function() {
+    it('should add an object with multiple relationships', function() {
       let db = new ObjectDb(schema)
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
@@ -217,7 +217,7 @@ describe('ObjectDb', function() {
       obj11.many = [ many1, many2 ]
       many2.object2 = obj22
 
-      let changes = db.create(obj11)
+      let changes = db.integrate(obj11)
 
       expect(changes.changes.length).to.equal(6)
       expect(changes.changes).deep.equal([
@@ -269,14 +269,14 @@ describe('ObjectDb', function() {
     })
   })
 
-  describe('select', function() {
+  describe('read', function() {
     it('should find all entities with certain criteria', async function() {
       let db = new ObjectDb(schema)
 
-      db.create('Object1', { id: 1, a: 'a', b: 1 })
-      db.create('Object1', { id: 2, a: 'b', b: 1 })
-      db.create('Object1', { id: 3, a: 'a', b: 2 })
-      db.create('Object1', { id: 4, a: 'b', b: 2 })
+      db.integrate('Object1', { id: 1, a: 'a', b: 1 })
+      db.integrate('Object1', { id: 2, a: 'b', b: 1 })
+      db.integrate('Object1', { id: 3, a: 'a', b: 2 })
+      db.integrate('Object1', { id: 4, a: 'b', b: 2 })
 
       let result: any[] = db.read('Object1', { a: ['a', 'b'], b: 1 })
 
@@ -288,13 +288,13 @@ describe('ObjectDb', function() {
     })
   })
 
-  describe('delete', function() {
-    it('should delete a simple class', function() {
+  describe('remove', function() {
+    it('should remove a simple class', function() {
       let db = new ObjectDb(schema)
       let obj = new Object1(1, 'a', 1, null, null)
-      db.create(obj)
+      db.integrate(obj)
 
-      let changes = db.delete(new Object1(1))
+      let changes = db.remove(new Object1(1))
 
       expect(changes.changes.length).to.equal(1)
       expect(changes.changes[0]).to.deep.equal(
@@ -304,12 +304,12 @@ describe('ObjectDb', function() {
       expect(objects).to.be.empty
     })
 
-    it('should delete a simple class given as a plain object', function() {
+    it('should remove a simple class given as a plain object', function() {
       let db = new ObjectDb(schema)
       let obj = new Object1(1, 'a', 1, null, null)
-      db.create(obj)
+      db.integrate(obj)
 
-      let changes = db.delete('Object1', obj)
+      let changes = db.remove('Object1', obj)
 
       expect(changes.changes.length).to.equal(1)
       expect(changes.changes[0]).to.deep.equal(
@@ -319,16 +319,16 @@ describe('ObjectDb', function() {
       expect(objects).to.be.empty
     })
 
-    it('should delete a list of simple objects', function() {
+    it('should remove a list of simple objects', function() {
       let db = new ObjectDb(schema)
       
       let objs = [
         new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3)
       ]
 
-      db.create('Object1', objs)
+      db.integrate('Object1', objs)
 
-      let changes = db.delete('Object1', [ new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3) ])
+      let changes = db.remove('Object1', [ new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3) ])
 
       expect(changes.changes.length).to.equal(3)
       expect(changes.changes[0]).to.deep.equal(
@@ -342,16 +342,16 @@ describe('ObjectDb', function() {
       expect(objects).to.be.empty
     })
 
-    it('should delete a list of simple objects given as plain objects', function() {
+    it('should remove a list of simple objects given as plain objects', function() {
       let db = new ObjectDb(schema)
       
       let objs = [
         new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3)
       ]
 
-      db.create('Object1', objs)
+      db.integrate('Object1', objs)
 
-      let changes = db.delete([ new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3) ])
+      let changes = db.remove([ new Object1(1, 'a', 1), new Object1(2, 'b', 2), new Object1(3, 'c', 3) ])
 
       expect(changes.changes.length).to.equal(3)
       expect(changes.changes).to.deep.equal([
@@ -362,16 +362,16 @@ describe('ObjectDb', function() {
       expect(objects).to.be.empty
     })
 
-    it('should delete a list of mixed simple objects', function() {
+    it('should remove a list of mixed simple objects', function() {
       let db = new ObjectDb(schema)
       
       let objs = [
         new Object1(1, 'a', 1), new Object2('x', 'b')
       ]
 
-      db.create(objs)
+      db.integrate(objs)
 
-      let changes = db.delete([ new Object1(1, 'a', 1), new Object2('x', 'b') ])
+      let changes = db.remove([ new Object1(1, 'a', 1), new Object2('x', 'b') ])
 
       expect(changes.changes.length).to.equal(2)
       expect(changes.changes[0]).to.deep.equal(
@@ -390,9 +390,9 @@ describe('ObjectDb', function() {
       let db = new ObjectDb(schema)
       let obj1 = new Object1(1, 'a', 1, 1)
       obj1.object1 = obj1
-      db.create(obj1)
+      db.integrate(obj1)
 
-      let changes = db.delete(obj1)
+      let changes = db.remove(obj1)
 
       expect(changes.changes).to.deep.equal([
         new Change(obj1, [ 'delete' ])
@@ -402,7 +402,7 @@ describe('ObjectDb', function() {
       expect(objects1).to.be.empty
     })
 
-    it('should delete multiple objects referencing each other but are not wired', function() {
+    it('should remove multiple objects referencing each other but are not wired', function() {
       let db = new ObjectDb(schema)
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
@@ -412,9 +412,9 @@ describe('ObjectDb', function() {
       let many1 = new ManyObject(1, 'x', 'e', 1)
       let many2 = new ManyObject(1, 'y', 'f', 2)
 
-      db.create([ obj11, obj12, obj21, obj22, many1, many2 ])
+      db.integrate([ obj11, obj12, obj21, obj22, many1, many2 ])
 
-      let changes = db.delete([ new Object1(1, 'a', 1, 2, 'x'), new Object1(2, 'b', 2, 1, 'y'), new Object2('x', 'c'), new Object2('y', 'd'), new ManyObject(1, 'x', 'e', 1), new ManyObject(1, 'y', 'f', 2) ])
+      let changes = db.remove([ new Object1(1, 'a', 1, 2, 'x'), new Object1(2, 'b', 2, 1, 'y'), new Object2('x', 'c'), new Object2('y', 'd'), new ManyObject(1, 'x', 'e', 1), new ManyObject(1, 'y', 'f', 2) ])
 
       expect(changes.changes.length).to.equal(6)
       expect(changes.changes).deep.equal([
@@ -453,7 +453,7 @@ describe('ObjectDb', function() {
       expect(objectManies).to.be.empty
     })
 
-    it('should delete an object with multiple relationships', function() {
+    it('should remove an object with multiple relationships', function() {
       let db = new ObjectDb(schema)
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
@@ -468,7 +468,7 @@ describe('ObjectDb', function() {
       obj11.many = [ many1, many2 ]
       many2.object2 = obj22
 
-      db.create(obj11)
+      db.integrate(obj11)
 
       let delObj11 = new Object1(1, 'a', 1, 2, 'x')
       let delObj22 = new Object2('y', 'd')
@@ -478,7 +478,7 @@ describe('ObjectDb', function() {
       delObj11.many = [ delMany1, delMany2 ]
       delMany2.object2 = delObj22
 
-      let changes = db.delete(delObj11)
+      let changes = db.remove(delObj11)
 
       expect(changes.changes.length).to.equal(4)
       expect(changes.changes).deep.equal([
@@ -517,7 +517,7 @@ describe('ObjectDb', function() {
       expect(objectManies).to.be.empty
     })
 
-    it('should delete an object and every relationship', function() {
+    it('should remove an object and every relationship', function() {
       let db = new ObjectDb(schema)
 
       let obj11 = new Object1(1, 'a', 1, 2, 'x')
@@ -532,7 +532,7 @@ describe('ObjectDb', function() {
       obj11.many = [ many1, many2 ]
       many2.object2 = obj22
 
-      db.create(obj11)
+      db.integrate(obj11)
 
       let delObj11 = new Object1(1, 'a', 1, 2, 'x')
       let delObj12 = new Object1(2, 'b', 2, 1, 'y')
@@ -546,7 +546,7 @@ describe('ObjectDb', function() {
       delObj11.many = [ delMany1, delMany2 ]
       delMany2.object2 = delObj22
 
-      let changes = db.delete(delObj11)
+      let changes = db.remove(delObj11)
 
       expect(changes.changes.length).to.equal(6)
       expect(changes.changes).deep.equal([
@@ -602,7 +602,7 @@ describe('ObjectDb', function() {
       let obj1 = new Object1(1)
       let obj2 = new Object2('x')
 
-      db.create([ obj1, obj2 ])
+      db.integrate([ obj1, obj2 ])
 
       let many = new ManyObject(1, 'x', 'a')
 
@@ -628,7 +628,7 @@ describe('ObjectDb', function() {
     it('should wire a one-to-one', function() {
       let db = new ObjectDb(schema)
       let obj1 = new Object1(1, 'a', 1, 2, null)
-      db.create(obj1)
+      db.integrate(obj1)
 
       let obj2 = new Object1(2, 'b', 2, 1, null)
       
@@ -661,7 +661,7 @@ describe('ObjectDb', function() {
       let obj2 = new Object2('x')
       let many = new ManyObject(1, 'x', 'a')
 
-      db.create([ obj1, obj2, many ])
+      db.integrate([ obj1, obj2, many ])
 
       let changes = db.unwire(many)
 
@@ -683,7 +683,7 @@ describe('ObjectDb', function() {
       let obj1 = new Object1(1, 'a', 1, 2, null)
       let obj2 = new Object1(2, 'b', 2, 1, null)
       
-      db.create([ obj1, obj2 ])
+      db.integrate([ obj1, obj2 ])
       
       let changes = db.unwire(obj2)
 
