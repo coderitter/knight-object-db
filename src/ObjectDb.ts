@@ -99,11 +99,11 @@ export default class ObjectDb {
     l.param('changes', changes)
 
     if (object instanceof Array) {
-      l.debug('Given object is an array. Integrating every object of that array...')
+      l.user('Given object is an array. Integrating every object of that array...')
 
       for (let obj of object) {
         l.var('obj', obj)
-        l.debug('Going into recursion...')
+        l.user('Going into recursion...')
         if (entityName != undefined) {
           this.integrate(entityName, obj, changes)
         }
@@ -114,11 +114,11 @@ export default class ObjectDb {
       }
 
       if (rootMethodCall) {
-        l.debug('Wiring all changed objects...')
+        l.user('Wiring all changed objects...')
 
         for (let change of changes.changes) {
           if (change.entityName != undefined && change.entity != undefined) {
-            l.debug(`Wiring '${change.entityName}'...`)
+            l.user(`Wiring '${change.entityName}'...`)
             this.wire(change.entityName, change.entity)
             l.returning(`Returning from wiring '${change.entityName}'...`)
           }  
@@ -162,10 +162,10 @@ export default class ObjectDb {
         }
       }
 
-      l.varInsane('criteria', criteria)
+      l.var('criteria', criteria)
 
       let existingObjects: any[] = this.read(entityName, criteria)
-      l.varInsane('existingObjects', existingObjects)
+      l.var('existingObjects', existingObjects)
 
       if (existingObjects.length > 1) {
         throw new Error('There is more than one object representing the same entity in the database')
@@ -174,11 +174,11 @@ export default class ObjectDb {
       let updatedProps: string[] = []
 
       if (existingObjects.length == 1) {
-        l.debug('The entity represented by the given object is already in the database but represented by a different object. Updating...')
+        l.user('The entity represented by the given object is already in the database but represented by a different object. Updating...')
         let existingObject = existingObjects[0]
 
         if (this.immutableObjects === true) {
-          l.debug('Database is set to immutable. Replacing...')
+          l.user('Database is set to immutable. Replacing...')
           this.unwire(entityName, existingObject)
 
           let index = objects.indexOf(existingObject)
@@ -201,7 +201,7 @@ export default class ObjectDb {
           }
         }
         else {
-          l.debug('Database is not set to immutable. Copying all values to already existing object...')
+          l.user('Database is not set to immutable. Copying all values to already existing object...')
           
           for (let prop of Object.keys(object)) {
             if (entity.relationships != undefined && prop in entity.relationships) {
@@ -211,24 +211,24 @@ export default class ObjectDb {
             if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
               updatedProps.push(prop.toString())
               existingObject[prop] = object[prop]
-              l.debug(`${prop} = ${object[prop]}`)
+              l.user(`${prop} = ${object[prop]}`)
             }
           }
         }
 
         if (entity.relationships != undefined) {
-          l.debug('Integrating relationships...')
+          l.user('Integrating relationships...')
 
           for (let relationshipName of Object.keys(entity.relationships)) {
             l.var(relationshipName, object[relationshipName])
 
             if (object[relationshipName] == undefined) {
-              l.insane('Relationship is either null or undefined. Continuing...')
+              l.dev('Relationship is either null or undefined. Continuing...')
               continue
             }
 
             if (typeof object[relationshipName] != 'object') {
-              l.insane('Value of relationship is not an object. Continuing...')
+              l.dev('Value of relationship is not an object. Continuing...')
               continue
             }
 
@@ -239,7 +239,7 @@ export default class ObjectDb {
               throw new Error(`Entity '${relationship.otherEntity}' not contained in schema`)
             }
 
-            l.debug(`Integrating '${relationshipName}'. Going into recursion...`)
+            l.user(`Integrating '${relationshipName}'. Going into recursion...`)
             this.integrate(relationship.otherEntity, object[relationshipName], changes)
             l.returning('Returning from recursion...')
           }
@@ -248,13 +248,13 @@ export default class ObjectDb {
         if (updatedProps.length > 0) {
           let updatedObject = this.immutableObjects ? object : existingObject
           let change = new Change(entityName, updatedObject, { method: 'update', props: updatedProps })
-          l.debug('Properties have changed', updatedProps)
-          l.debug('Adding change to list of changes...', change)
+          l.user('Properties have changed', updatedProps)
+          l.user('Adding change to list of changes...', change)
           changes.add(change)
         }
 
         if (rootMethodCall) {
-          l.debug('Wiring all changed objects...')
+          l.user('Wiring all changed objects...')
 
           if (this.immutableObjects) {
             this.wire(entityName, object)
@@ -262,7 +262,7 @@ export default class ObjectDb {
 
           for (let change of changes.changes) {
             if (change.entityName != undefined && change.entity != undefined) {
-              l.debug(`Wiring '${change.entityName}'...`)
+              l.user(`Wiring '${change.entityName}'...`)
               this.wire(change.entityName, change.entity)
               l.returning(`Returning from wiring '${change.entityName}'...`)
             }
@@ -274,38 +274,38 @@ export default class ObjectDb {
       }
     }
 
-    l.debug('Adding object to database...')
+    l.user('Adding object to database...')
     objects.push(object)
     let change = new Change(entityName, object, 'create')
     
-    l.debug('Created a change object which is pushed into the list of changes...', change)
+    l.user('Created a change object which is pushed into the list of changes...', change)
     changes.changes.push(change)
 
     if (entity.relationships != undefined) {
-      l.debug('Creating all relationships...')
+      l.user('Creating all relationships...')
 
       for (let relationshipName of Object.keys(entity.relationships)) {
         if (typeof object[relationshipName] != 'object' || object[relationshipName] === null) {
-          l.debug(`Relationship ${relationshipName} is not set. Continuing...`)
+          l.user(`Relationship ${relationshipName} is not set. Continuing...`)
           continue
         }
 
         let relationship = entity.relationships[relationshipName]
-        l.debug(`Integrating relationship '${relationshipName}'. Going into recursion...`)
+        l.user(`Integrating relationship '${relationshipName}'. Going into recursion...`)
         this.integrate(relationship.otherEntity, object[relationshipName], changes)
         l.returning('Returning from recursion...')
       }
     }
     else {
-      l.debug('There are no relationships')
+      l.user('There are no relationships')
     }
 
     if (rootMethodCall) {
-      l.debug('Wiring all changed objects...')
+      l.user('Wiring all changed objects...')
 
       for (let change of changes.changes) {
         if (change.entityName != undefined && change.entity != undefined) {
-          l.debug(`Wiring '${change.entityName}'...`)
+          l.user(`Wiring '${change.entityName}'...`)
           this.wire(change.entityName, change.entity)
           l.returning(`Returning from wiring '${change.entityName}'...`)
         }
@@ -383,11 +383,11 @@ export default class ObjectDb {
     l.param('changes', changes)
 
     if (object instanceof Array) {
-      l.debug('Given object is an array. Removing every object of that array...')
+      l.user('Given object is an array. Removing every object of that array...')
 
       for (let obj of object) {
         l.var('obj', obj)
-        l.debug('Going into recursion...')
+        l.user('Going into recursion...')
         if (entityName != undefined) {
           this.remove(entityName, obj, changes)
         }
@@ -398,11 +398,11 @@ export default class ObjectDb {
       }
 
       if (rootMethodCall) {
-        l.debug('Unwiring all changed objects...')
+        l.user('Unwiring all changed objects...')
 
         for (let change of changes.changes) {
           if (change.entityName != undefined && change.entity != undefined) {
-            l.debug(`Unwiring '${change.entityName}'...`)
+            l.user(`Unwiring '${change.entityName}'...`)
             this.unwire(change.entityName, change.entity)
             l.returning(`Returning from unwiring '${change.entityName}'...`)
           }  
@@ -426,13 +426,13 @@ export default class ObjectDb {
       return changes
     }
 
-    l.debug('Determing object to remove...')
+    l.user('Determing object to remove...')
 
     let criteria = idProps(this.schema, entityName, object)
-    l.varInsane('criteria', criteria)
+    l.var('criteria', criteria)
 
     let objectsToDelete: any[] = this.read(entityName, criteria)
-    l.varInsane('objects', objectsToDelete)
+    l.var('objects', objectsToDelete)
 
     if (objectsToDelete.length == 0) {
       l.returning('No object to remove could be determined. Returning changes...', changes)
@@ -445,17 +445,17 @@ export default class ObjectDb {
 
     let toDelete = objectsToDelete[0]
 
-    l.debug('Removing object from database...')
+    l.user('Removing object from database...')
     let objects = this.getObjects(entityName)
     let index = objects.indexOf(toDelete)
-    l.varInsane('index', index)
+    l.var('index', index)
     objects.splice(index, 1)
 
     let change = new Change(entityName, toDelete, [ 'delete' ])
-    l.debug('Adding change to list of changes...', change)
+    l.user('Adding change to list of changes...', change)
     changes.add(change)
 
-    l.debug('Going through all given relationships and removing them too...')
+    l.user('Going through all given relationships and removing them too...')
 
     if (entity.relationships != undefined) {
       for (let relationshipName of Object.keys(entity.relationships)) {
@@ -464,32 +464,32 @@ export default class ObjectDb {
         let relationship = entity.relationships[relationshipName]
 
         if (relationship.manyToOne === true && typeof object[relationshipName] == 'object' && object[relationshipName] !== null) {
-          l.debug('Removing many-to-one relationship. Going into recursion...')
+          l.user('Removing many-to-one relationship. Going into recursion...')
           this.remove(relationship.otherEntity, object[relationshipName], changes)
           l.returning('Returning from recursion...')
         }
         else if (relationship.oneToMany === true && object[relationshipName] instanceof Array && object[relationshipName].length > 0) {
           for (let relationshipObject of object[relationshipName]) {
-            l.debug('Removing object of one-to-many relationship. Going into recursion...')
+            l.user('Removing object of one-to-many relationship. Going into recursion...')
             this.remove(relationship.otherEntity, relationshipObject, changes)
             l.returning('Returning from recursion...')
           }
         }
         else {
-          l.debug('Relationship has no set object. Continuing...')
+          l.user('Relationship has no set object. Continuing...')
         }
       }
     }
     else {
-      l.debug('Entity has no relationships...')
+      l.user('Entity has no relationships...')
     }
 
     if (rootMethodCall) {
-      l.debug('Unwiring all changed objects...')
+      l.user('Unwiring all changed objects...')
 
       for (let change of changes.changes) {
         if (change.entityName != undefined && change.entity != undefined) {
-          l.debug(`Unwiring '${change.entityName}'...`)
+          l.user(`Unwiring '${change.entityName}'...`)
           this.unwire(change.entityName, change.entity)
           l.returning(`Returning from unwiring '${change.entityName}'...`)
         }  
@@ -535,63 +535,63 @@ export default class ObjectDb {
     }
 
     if (entity.relationships != undefined) {
-      l.debug('Wiring relationships...')
+      l.user('Wiring relationships...')
 
       for (let relationshipName of Object.keys(entity.relationships)) {
         let relationship = entity.relationships[relationshipName]
-        l.debug('Wiring next relationship...', relationshipName, relationship)
+        l.user('Wiring next relationship...', relationshipName, relationship)
 
         let criteria = {} as ReadCriteria
         criteria[relationship.otherId] = object[relationship.thisId]
 
         let relationshipObjects: any[] = this.read(relationship.otherEntity, criteria)
-        l.varInsane('relationshipObjects', relationshipObjects)
+        l.var('relationshipObjects', relationshipObjects)
 
         if (relationshipObjects.length == 0) {
-          l.debug('Did not found any relationship objects. Continuing...')
+          l.user('Did not found any relationship objects. Continuing...')
           continue
         }
 
         if (relationship.manyToOne === true) {
-          l.debug('Relationship is many-to-one')
-          l.varInsane(`object.${relationshipName}`, object[relationshipName])
+          l.user('Relationship is many-to-one')
+          l.var(`object.${relationshipName}`, object[relationshipName])
 
           if (object[relationshipName] !== relationshipObjects[0]) {
-            l.debug('Setting relationship object on many-to-one... ')
+            l.user('Setting relationship object on many-to-one... ')
             object[relationshipName] = relationshipObjects[0]
           }
           else {
-            l.debug('Relationship is already set')
+            l.user('Relationship is already set')
           }
         }
         else if (relationship.oneToMany === true) {
-          l.debug('Relationship is one-to-many')
-          l.varInsane(`object.${relationshipName}`, object[relationshipName])
+          l.user('Relationship is one-to-many')
+          l.var(`object.${relationshipName}`, object[relationshipName])
 
           if (this.immutableObjects && object[relationshipName] instanceof Array) {
-            l.debug('Objects should be treated immutable. Cloning array...')
+            l.user('Objects should be treated immutable. Cloning array...')
             object[relationshipName] = object[relationshipName].slice()
           }
 
           if (! (object[relationshipName] instanceof Array)) {
-            l.debug('Initializing empty array...')
+            l.user('Initializing empty array...')
             object[relationshipName] = []
           }
 
           if (object[relationshipName].length == 0) {
-            l.debug('Setting relationship objects all at once...')
+            l.user('Setting relationship objects all at once...')
             object[relationshipName].push(...relationshipObjects)
           }
           else {
-            l.debug('Adding relationship objects one by one to avoid duplicates...')
+            l.user('Adding relationship objects one by one to avoid duplicates...')
 
             for (let relationshipObject of relationshipObjects) {
               if (object[relationshipName].indexOf(relationshipObject) == -1) {
-                l.debug('Adding relationship object to array...', relationshipObject)
+                l.user('Adding relationship object to array...', relationshipObject)
                 object[relationshipName].push(relationshipObject)
               }
               else {
-                l.debug('Skipping because already included...', relationshipObject)
+                l.user('Skipping because already included...', relationshipObject)
               }
             }
           }
@@ -599,7 +599,7 @@ export default class ObjectDb {
       }
     }
     
-    l.debug('Iterating through every entity adding relationships referencing the given object...')
+    l.user('Iterating through every entity adding relationships referencing the given object...')
 
     for (let otherEntityName of Object.keys(this.schema)) {
       l.var('otherEntityName', otherEntityName)
@@ -607,32 +607,32 @@ export default class ObjectDb {
       if (this.schema[otherEntityName].relationships != undefined) {
         let otherEntity = this.schema[otherEntityName]
 
-        l.debug('Entity has relationships. Iterating through all of them...')
+        l.user('Entity has relationships. Iterating through all of them...')
 
         for (let otherRelationshipName of Object.keys(otherEntity.relationships!)) {          
           let otherRelationship = otherEntity.relationships![otherRelationshipName]
-          l.varInsane('otherRelationship', otherRelationship)
+          l.var('otherRelationship', otherRelationship)
           
           if (otherRelationship.otherEntity == entityName) {
-            l.debug('Found relationship which is linking back to the entity represented by the given object', otherRelationshipName)
-            l.debug('Retrieving all objects referencing the given object...')
+            l.user('Found relationship which is linking back to the entity represented by the given object', otherRelationshipName)
+            l.user('Retrieving all objects referencing the given object...')
 
             let criteria = {} as ReadCriteria
             criteria[otherRelationship.thisId] = object[otherRelationship.otherId]
-            l.varInsane('criteria', criteria)
+            l.var('criteria', criteria)
 
             let otherObjects: any[] = this.read(otherEntityName, criteria)
-            l.varInsane('otherObjects', otherObjects)
+            l.var('otherObjects', otherObjects)
 
             for (let otherObject of otherObjects) {
               l.var('otherObject', otherObject)
 
               if (otherRelationship.manyToOne === true && otherObject[otherRelationshipName] !== object) {
-                l.debug('Setting object on the other object\'s many-to-one relationship... ' + otherRelationshipName)
+                l.user('Setting object on the other object\'s many-to-one relationship... ' + otherRelationshipName)
                 otherObject[otherRelationshipName] = object
               }
               else if (otherRelationship.oneToMany === true) {
-                l.debug('Relationship is one-to-many')
+                l.user('Relationship is one-to-many')
 
                 let index = -1
 
@@ -640,35 +640,35 @@ export default class ObjectDb {
                   index = otherObject[otherRelationshipName].indexOf(object)
                 }
 
-                l.varInsane('index', index)
+                l.var('index', index)
 
                 if (this.immutableObjects && index > -1) {
-                  l.debug('Objects should be treated immutable. Cloning array...')
+                  l.user('Objects should be treated immutable. Cloning array...')
                   otherObject[otherRelationshipName] = otherObject[otherRelationshipName].slice()
                 }
 
                 if (! (otherObject[otherRelationshipName] instanceof Array)) {
-                  l.debug('Initializing empty array...')
+                  l.user('Initializing empty array...')
                   otherObject[otherRelationshipName] = []
                 }
 
                 if (index == -1) {
-                  l.debug('Adding object to other object\'s one-to-many relationship... ' + otherRelationshipName)
+                  l.user('Adding object to other object\'s one-to-many relationship... ' + otherRelationshipName)
                   otherObject[otherRelationshipName].push(object)
                 }
                 else {
-                  l.debug('Object already present in other object\'s relationship. Not adding...')
+                  l.user('Object already present in other object\'s relationship. Not adding...')
                 }
               }
             }
           }
           else {
-            l.debug('Relationship does not refer back to the entity represented by the given object...', otherRelationshipName)
+            l.user('Relationship does not refer back to the entity represented by the given object...', otherRelationshipName)
           }
         }
       }
       else {
-        l.debug('Entity does not have any relationships. Continuing...')
+        l.user('Entity does not have any relationships. Continuing...')
       }
     }
 
@@ -709,109 +709,109 @@ export default class ObjectDb {
       throw new Error(`Entity '${entityName}' not contained in schema`)
     }
 
-    l.debug('Unwiring every object that references the given object...')
+    l.user('Unwiring every object that references the given object...')
 
     for (let otherEntityName of Object.keys(this.schema)) {
       l.var('otherEntityName', otherEntityName)
 
       if (this.schema[otherEntityName].relationships != undefined) {
 
-        l.debug('Entity has relationships. Iterating through all of them...')
+        l.user('Entity has relationships. Iterating through all of them...')
 
         for (let otherRelationshipName of Object.keys(this.schema[otherEntityName].relationships!)) {
           let otherRelationship = this.schema[otherEntityName].relationships![otherRelationshipName]
 
-          l.varInsane('otherRelationship', otherRelationship)
+          l.var('otherRelationship', otherRelationship)
           
           if (otherRelationship.otherEntity == entityName) {
-            l.debug('Found relationship which is linking back to the entity represented by the given object', otherRelationshipName)
-            l.debug('Retrieving all objects referencing the given object...')
+            l.user('Found relationship which is linking back to the entity represented by the given object', otherRelationshipName)
+            l.user('Retrieving all objects referencing the given object...')
 
             let criteria = {} as ReadCriteria
             criteria[otherRelationship.thisId] = object[otherRelationship.otherId]
-            l.varInsane('criteria', criteria)
+            l.var('criteria', criteria)
 
             let otherObjects: any[] = this.read(otherEntityName, criteria)
-            l.varInsane('otherObjects', otherObjects)
+            l.var('otherObjects', otherObjects)
 
             for (let otherObject of otherObjects) {
               l.var('otherObject', otherObject)
 
               if (otherRelationship.manyToOne === true) {
-                l.debug('Unsetting other object\'s many-to-one relationship... ' + otherRelationshipName)
+                l.user('Unsetting other object\'s many-to-one relationship... ' + otherRelationshipName)
                 otherObject[otherRelationshipName] = null
               }
               else if (otherRelationship.oneToMany === true) {
-                l.debug('Relationship is one-to-many')
+                l.user('Relationship is one-to-many')
 
                 if (otherObject[otherRelationshipName] instanceof Array) {
                   let index = otherObject[otherRelationshipName].indexOf(object)
 
                   if (index > -1) {
                     if (this.immutableObjects) {
-                      l.debug('Objects should be treated immutable. Cloning array...')
+                      l.user('Objects should be treated immutable. Cloning array...')
                       otherObject[otherRelationshipName] = otherObject[otherRelationshipName].slice()
                     }
 
-                    l.debug('Removing object on other object\'s one-to-many relationship... ' + otherRelationshipName)
+                    l.user('Removing object on other object\'s one-to-many relationship... ' + otherRelationshipName)
                     otherObject[otherRelationshipName].splice(index, 1)
                   }
                   else {
-                    l.debug('Object not present in other object\'s relationship. Not removing...')
+                    l.user('Object not present in other object\'s relationship. Not removing...')
                   }  
                 }
                 else {
-                  l.debug('Object not present in other object\'s relationship. Not removing...')
+                  l.user('Object not present in other object\'s relationship. Not removing...')
                 }  
               }
             }
           }
           else {
-            l.debug('Relationship does not refer back to the entity represented by the given object...', otherRelationshipName)
+            l.user('Relationship does not refer back to the entity represented by the given object...', otherRelationshipName)
           }
         }
       }
       else {
-        l.debug('Entity does not have any relationships. Continuing...')
+        l.user('Entity does not have any relationships. Continuing...')
       }
     }
 
     if (entity.relationships != undefined) {
-      l.debug('Iterating through relationships...')
+      l.user('Iterating through relationships...')
 
       for (let relationshipName of Object.keys(entity.relationships)) {
         l.var('relationshipName', relationshipName)
 
         let relationship = entity.relationships[relationshipName]
-        l.varInsane('relationship', relationship)
+        l.var('relationship', relationship)
 
         let criteria = {} as ReadCriteria
         criteria[relationship.otherId] = object[relationship.thisId]
-        l.varInsane('criteria', criteria)
+        l.var('criteria', criteria)
 
         let relationshipObjects: any[] = this.read(relationship.otherEntity, criteria)
-        l.varInsane('relationshipObjects', relationshipObjects)
+        l.var('relationshipObjects', relationshipObjects)
 
         if (relationship.manyToOne === true) {
-          l.debug('Relationship is many-to-one', object[relationshipName])
+          l.user('Relationship is many-to-one', object[relationshipName])
 
           if (object[relationship.thisId] != null || object[relationshipName] != null) {
-            l.debug('Unsetting relationship object on many-to-one... ' + relationship.thisId + ' = null')
+            l.user('Unsetting relationship object on many-to-one... ' + relationship.thisId + ' = null')
             object[relationshipName] = null
           }
           else {
-            l.debug('Relationship is already unset')
+            l.user('Relationship is already unset')
           }
         }
         else if (relationship.oneToMany === true) {
-          l.debug('Relationship is one-to-many', object[relationshipName])
+          l.user('Relationship is one-to-many', object[relationshipName])
 
           if (object[relationshipName] instanceof Array && object[relationshipName].length > 0) {
-            l.debug('Unsetting array...')
+            l.user('Unsetting array...')
             object[relationshipName] = []
           }
           else {
-            l.debug('Relationship is either undefined or empty. Nothing was unset.')
+            l.user('Relationship is either undefined or empty. Nothing was unset.')
           }
         }
       }
