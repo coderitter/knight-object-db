@@ -4,7 +4,7 @@ import { matchCriteria } from 'mega-nice-criteria-matcher'
 import Log from 'mega-nice-log'
 import { idProps, Schema } from './Schema'
 
-let log = new Log('ObjectDb.ts')
+let log = new Log('ObjectDb.ts', 'silent')
 
 export default class ObjectDb {
 
@@ -142,7 +142,7 @@ export default class ObjectDb {
 
     // avoid circles
     if (objects.indexOf(object) > -1) {
-      l.returning('Object already created. Returning changes...', changes)
+      l.returning('Object is already in the database. Returning changes...', changes)
       return changes
     }
 
@@ -162,10 +162,103 @@ export default class ObjectDb {
         }
       }
 
-      let existingObjects = this.read(entityName, criteria)
+      l.varInsane('criteria', criteria)
 
-      if (existingObjects != undefined && existingObjects.length > 0) {
-        l.returning('There already is an object which claims to be the same entity regarding its id. Returning changes...', changes)
+      let existingObjects: any[] = this.read(entityName, criteria)
+      l.varInsane('existingObjects', existingObjects)
+
+      if (existingObjects.length > 1) {
+        throw new Error('There is more than one object representing the same entity in the database')
+      }
+
+      let updatedProps: string[] = []
+
+      if (existingObjects.length == 1) {
+        l.debug('The entity represented by the given object is already in the database but represented by a different object. Updating...')
+        let existingObject = existingObjects[0]
+
+        if (this.immutableObjects === true) {
+          l.debug('Database is set to immutable. Replacing...')
+          this.unwire(entityName, existingObject)
+
+          let index = objects.indexOf(existingObject)
+          objects.splice(index, 1)
+
+          objects.push(object)
+
+          for (let prop of Object.keys(existingObject)) {
+            if (entity.relationships != undefined && prop in entity.relationships) {
+              continue
+            }
+
+            if (existingObject[prop] !== object[prop]) {
+              updatedProps.push(prop.toString())
+            }
+          }
+        }
+        else {
+          l.debug('Database is not set to immutable. Copying all values to already existing object...')
+          
+          for (let prop of Object.keys(object)) {
+            if (entity.relationships != undefined && prop in entity.relationships) {
+              continue
+            }
+
+            if (existingObject[prop] !== object[prop]) {
+              updatedProps.push(prop.toString())
+              existingObject[prop] = object[prop]
+              l.debug(`${prop} = ${object[prop]}`)
+            }
+          }
+        }
+
+        if (entity.relationships != undefined) {
+          l.debug('Integrating relationships...')
+
+          for (let relationshipName of Object.keys(entity.relationships)) {
+            l.var(relationshipName, object[relationshipName])
+
+            if (object[relationshipName] == undefined) {
+              l.insane('Relationship is either null or undefined. Continuing...')
+              continue
+            }
+
+            if (typeof object[relationshipName] != 'object') {
+              l.insane('Value of relationship is not an object. Continuing...')
+              continue
+            }
+
+            let relationship = entity.relationships[relationshipName]
+            let otherEntity = this.schema[relationship.otherEntity]
+            
+            if (otherEntity == undefined) {
+              throw new Error(`Entity '${relationship.otherEntity}' not contained in schema`)
+            }
+
+            l.debug(`Integrating '${relationshipName}'. Going into recursion...`)
+            this.integrate(relationship.otherEntity, object[relationshipName], changes)
+            l.returning('Returning from recursion...')
+          }
+        }
+
+        if (updatedProps.length > 0) {
+          let updatedObject = this.immutableObjects ? object : existingObject
+          let change = new Change(entityName, updatedObject, { method: 'update', props: updatedProps })
+          l.debug('Properties have changed', updatedProps)
+          l.debug('Adding change to list of changes...', change)
+          changes.add(change)
+        }
+
+        if (rootMethodCall) {
+          if (this.immutableObjects) {
+            this.wire(entityName, object)
+          }
+          else {
+            this.wire(entityName, existingObject)
+          }
+        }
+
+        l.returning('Returning changes...', changes)
         return changes
       }
     }
@@ -238,81 +331,6 @@ export default class ObjectDb {
     }
 
     return entities
-  }
-
-  update(entityName: string, object: any): Changes
-  update(classFunction: { new(): any }, object: any): Changes
-  update(object: any): Changes
-
-  update(arg1: any, arg2?: any): Changes {
-    let entityName
-    let object
-    let changes
-
-    if (typeof arg1 == 'string') {
-      entityName = arg1
-      object = arg2
-    }
-    else if (typeof arg1 == 'function') {
-      entityName = arg1.name
-      object = arg2
-    }
-    else if (typeof arg1 == 'object' && arg1 !== null) {
-      object = arg2
-      entityName = object.constructor.name
-    }
-
-    if (entityName == undefined) {
-      throw new Error('First given parameter was neither the entity name nor a constructor function nor an object')
-    }
-
-    let entity = this.schema[entityName]
-    if (entity == undefined) {
-      throw new Error(`Entity '${entityName}' not contained in schema`)
-    }
-
-    if (changes == undefined) {
-      changes = new Changes
-    }
-
-    if (object == undefined) {
-      return changes
-    }
-
-    let criteria = idProps(this.schema, entityName, object)
-    let objects: any[] = this.read(entityName, criteria)
-
-    if (objects.length == 0) {
-      return changes
-    }
-
-    if (objects.length > 1) {
-      throw new Error('There was more than one object for criteria: ' + JSON.stringify(criteria))
-    }
-
-    let toDelete = objects[0]
-    let index = objects.indexOf(toDelete)
-    objects.splice(index, 1)
-
-    let change = new Change(toDelete, [ 'delete' ])
-    changes.add(change)
-
-    if (entity.relationships != undefined) {
-      for (let relationshipName of Object.keys(entity.relationships)) {
-        let relationship = entity.relationships[relationshipName]
-
-        if (relationship.manyToOne === true && typeof object[relationshipName] == 'object' && object[relationshipName] !== null) {
-          this.remove(relationship.otherEntity, object[relationshipName])
-        }
-        else if (relationship.oneToMany === true && object[relationshipName] instanceof Array && object[relationshipName].length > 0) {
-          for (let relationshipObject of object[relationshipName]) {
-            this.remove(relationship.otherEntity, relationshipObject)
-          }
-        }
-      }
-    }
-
-    return changes
   }
 
   remove(entityName: string, object: any, changes?: Changes): Changes
@@ -422,7 +440,7 @@ export default class ObjectDb {
     l.varInsane('index', index)
     objects.splice(index, 1)
 
-    let change = new Change(toDelete, [ 'delete' ])
+    let change = new Change(entityName, toDelete, [ 'delete' ])
     l.debug('Adding change to list of changes...', change)
     changes.add(change)
 
@@ -471,21 +489,19 @@ export default class ObjectDb {
     return changes
   }
 
-  wire(entityName: string, object: any, changes?: Changes): Changes
-  wire(classFunction: { new(): any }, object: any, changes?: Changes): Changes
-  wire(object: any, changes?: Changes): Changes
+  wire(entityName: string, object: any): void
+  wire(classFunction: { new(): any }, object: any): void
+  wire(object: any): void
 
-  wire(arg1: any, arg2?: any, arg3?: any): Changes {
+  wire(arg1: any, arg2?: any): void {
     let l = log.mt('wire')
 
     let entityName
     let object
-    let changes
 
     if (typeof arg1 == 'string') {
       entityName = arg1
       object = arg2
-      changes = arg3
     }
     else if (typeof arg1 == 'function' && arg1.name != undefined) {
       entityName = arg1.name
@@ -493,11 +509,6 @@ export default class ObjectDb {
     else if (typeof arg1 == 'object' && arg1 !== null) {
       entityName = arg1.constructor.name
       object = arg1
-      changes = arg2
-    }
-
-    if (changes == undefined) {
-      changes = new Changes
     }
 
     if (entityName == undefined) {
@@ -506,7 +517,6 @@ export default class ObjectDb {
 
     l.param('entityName', entityName)
     l.param('object', object)
-    l.param('changes', changes)
 
     let entity = this.schema[entityName]
     if (entity == undefined) {
@@ -539,10 +549,6 @@ export default class ObjectDb {
           if (object[relationshipName] !== relationshipObjects[0]) {
             l.debug('Setting relationship object on many-to-one... ')
             object[relationshipName] = relationshipObjects[0]
-  
-            let change = new Change(object, { method: 'update', props: [relationshipName]})
-            l.debug('Adding change to list of changes...', change)
-            changes.add(change)
           }
           else {
             l.debug('Relationship is already set')
@@ -564,30 +570,18 @@ export default class ObjectDb {
           if (object[relationshipName].length == 0) {
             l.debug('Setting relationship objects all at once...')
             object[relationshipName].push(...relationshipObjects)
-
-            let change = new Change(object, { method: 'update', props: [ relationshipName ]})
-            l.debug('Adding change to list of changes...', change)
-            changes.add(change)  
           }
           else {
-            l.debug('Setting relationship objects one by one to avoid duplicates...')
+            l.debug('Adding relationship objects one by one to avoid duplicates...')
 
-            let somethingWasAdded = false
             for (let relationshipObject of relationshipObjects) {
               if (object[relationshipName].indexOf(relationshipObject) == -1) {
                 l.debug('Adding relationship object to array...', relationshipObject)
                 object[relationshipName].push(relationshipObject)
-                somethingWasAdded = true
               }
               else {
-                l.debug('Skipping relationship object because it is already included...', relationshipObject)
+                l.debug('Skipping because already included...', relationshipObject)
               }
-            }
-
-            if (somethingWasAdded) {
-              let change = new Change(object, { method: 'update', props: [ relationshipName ]})
-              l.debug('Adding change to list of changes...', change)
-              changes.add(change)    
             }
           }
         }
@@ -625,10 +619,6 @@ export default class ObjectDb {
               if (otherRelationship.manyToOne === true && otherObject[otherRelationshipName] !== object) {
                 l.debug('Setting object on the other object\'s many-to-one relationship... ' + otherRelationshipName)
                 otherObject[otherRelationshipName] = object
-
-                let change = new Change(otherObject, { method: 'update', props: [ otherRelationshipName ]})
-                l.debug('Adding change to list of changes...', change)
-                changes.add(change)
               }
               else if (otherRelationship.oneToMany === true) {
                 l.debug('Relationship is one-to-many')
@@ -654,10 +644,6 @@ export default class ObjectDb {
                 if (index == -1) {
                   l.debug('Adding object to other object\'s one-to-many relationship... ' + otherRelationshipName)
                   otherObject[otherRelationshipName].push(object)
-
-                  let change = new Change(otherObject, { method: 'update', props: [ otherRelationshipName ]})
-                  l.debug('Adding change to list of changes...', change)
-                  changes.add(change)
                 }
                 else {
                   l.debug('Object already present in other object\'s relationship. Not adding...')
@@ -675,24 +661,22 @@ export default class ObjectDb {
       }
     }
 
-    return changes
+    l.returning('Returning...')
   }
   
-  unwire(entityName: string, object: any, changes?: Changes): Changes
-  unwire(classFunction: { new(): any }, object: any, changes?: Changes): Changes
-  unwire(object: any, changes?: Changes): Changes
+  unwire(entityName: string, object: any): void
+  unwire(classFunction: { new(): any }, object: any): void
+  unwire(object: any): void
 
-  unwire(arg1: any, arg2?: any, arg3?: any): Changes {
+  unwire(arg1: any, arg2?: any): void {
     let l = log.mt('unwire')
 
     let entityName
     let object
-    let changes
 
     if (typeof arg1 == 'string') {
       entityName = arg1
       object = arg2
-      changes = arg3
     }
     else if (typeof arg1 == 'function' && arg1.name != undefined) {
       entityName = arg1.name
@@ -700,11 +684,6 @@ export default class ObjectDb {
     else if (typeof arg1 == 'object' && arg1 !== null) {
       entityName = arg1.constructor.name
       object = arg1
-      changes = arg2
-    }
-
-    if (changes == undefined) {
-      changes = new Changes
     }
 
     if (entityName == undefined) {
@@ -713,7 +692,6 @@ export default class ObjectDb {
 
     l.param('entityName', entityName)
     l.param('object', object)
-    l.param('changes', changes)
 
     let entity = this.schema[entityName]
     if (entity == undefined) {
@@ -751,10 +729,6 @@ export default class ObjectDb {
               if (otherRelationship.manyToOne === true) {
                 l.debug('Unsetting other object\'s many-to-one relationship... ' + otherRelationshipName)
                 otherObject[otherRelationshipName] = null
-
-                let change = new Change(otherObject, { method: 'update', props: [ otherRelationshipName ]})
-                l.debug('Adding change to list of changes...', change)
-                changes.add(change)
               }
               else if (otherRelationship.oneToMany === true) {
                 l.debug('Relationship is one-to-many')
@@ -770,10 +744,6 @@ export default class ObjectDb {
 
                     l.debug('Removing object on other object\'s one-to-many relationship... ' + otherRelationshipName)
                     otherObject[otherRelationshipName].splice(index, 1)
-
-                    let change = new Change(otherObject, { method: 'update', props: [ otherRelationshipName ]})
-                    l.debug('Adding change to list of changes...', change)
-                    changes.add(change)  
                   }
                   else {
                     l.debug('Object not present in other object\'s relationship. Not removing...')
@@ -817,10 +787,6 @@ export default class ObjectDb {
           if (object[relationship.thisId] != null || object[relationshipName] != null) {
             l.debug('Unsetting relationship object on many-to-one... ' + relationship.thisId + ' = null')
             object[relationshipName] = null
-  
-            let change = new Change(object, { method: 'update', props: [ relationshipName ]})
-            l.debug('Adding change to list of changes...', change)
-            changes.add(change)
           }
           else {
             l.debug('Relationship is already unset')
@@ -832,10 +798,6 @@ export default class ObjectDb {
           if (object[relationshipName] instanceof Array && object[relationshipName].length > 0) {
             l.debug('Unsetting array...')
             object[relationshipName] = []
-
-            let change = new Change(object, { method: 'update', props: [ relationshipName ]})
-            l.debug('Adding change to list of changes...', change)
-            changes.add(change)
           }
           else {
             l.debug('Relationship is either undefined or empty. Nothing was unset.')
@@ -844,7 +806,6 @@ export default class ObjectDb {
       }
     }
 
-    l.returning('Returning changes...', changes)
-    return changes
+    l.returning('Returning...')
   }
 }

@@ -6,15 +6,9 @@ import { ManyObject, Object1, Object2, schema } from './TestSchema'
 
 describe('ObjectDb', function() {
   describe('integrate', function() {
-    it('should add a simple class', function() {
+    it('should add a simple classed object', function() {
       let db = new ObjectDb(schema)
-      
-      let obj = new Object1
-      obj.id = 1
-      obj.property1 = 'a'
-      obj.property2 = 1
-      obj.object1Id = null
-      obj.object2Id = null
+      let obj = new Object1(1, 'a', 1, null, null)
       
       let changes = db.integrate(obj)
 
@@ -28,7 +22,7 @@ describe('ObjectDb', function() {
       expect(objects[0]).to.equal(obj)
     })
 
-    it('should add a simple class given as a plain object', function() {
+    it('should add a simple non-classed object', function() {
       let db = new ObjectDb(schema)
       
       let obj = {
@@ -51,7 +45,7 @@ describe('ObjectDb', function() {
       expect(objects[0]).to.equal(obj)
     })
 
-    it('should add a list of simple objects', function() {
+    it('should add a list of simple classed objects', function() {
       let db = new ObjectDb(schema)
       
       let objs = [
@@ -76,7 +70,7 @@ describe('ObjectDb', function() {
       expect(objects[2]).to.equal(objs[2])
     })
 
-    it('should add a list of simple objects given as plain objects', function() {
+    it('should add a list of simple non-classed objects', function() {
       let db = new ObjectDb(schema)
       
       let objs = [
@@ -112,7 +106,7 @@ describe('ObjectDb', function() {
       expect(objects[2]).to.equal(objs[2])
     })
 
-    it('should add a list of mixed simple objects', function() {
+    it('should add a list of mixed simple classed objects', function() {
       let db = new ObjectDb(schema)
       
       let objs = [
@@ -266,6 +260,342 @@ describe('ObjectDb', function() {
       expect(objectManies[1].object1).to.equal(obj11)
       expect(objectManies[1].object2).to.equal(obj22)
       expect(objectManies[1].object12).to.equal(obj12)
+    })
+
+    it('should update with a simple classed object', function() {
+      let db = new ObjectDb(schema)
+      let obj = new Object1(1, 'a', 1, null, null)
+      db.integrate(obj)
+
+      let updateObj = new Object1(1, 'b', 2, 2, 'x')
+      let changes = db.integrate(updateObj)
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(1)
+      expect(objects[0]).to.equal(obj)
+
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(obj, { method: 'update', props: [ 'property1', 'property2', 'object1Id', 'object2Id' ] }))
+    })
+
+    it('should update with a simple non-classed object', function() {
+      let db = new ObjectDb(schema)
+      let obj = new Object1(1, 'a', 1, null, null)
+      db.integrate(obj)
+
+      let updateObj = {
+        id: 1,
+        property1: 'b',
+        property2: 2,
+        object1Id: 2,
+        object2Id: 'x'
+      }
+
+      let changes = db.integrate('Object1', updateObj)
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(1)
+      expect(objects[0]).to.equal(obj)
+
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(obj, { method: 'update', props: [ 'property1', 'property2', 'object1Id', 'object2Id' ] }))
+    })
+
+    it('should replace with the given simple classed object when immutable replacing a classed object', function() {
+      let db = new ObjectDb(schema, true)
+      let obj = new Object1(1, 'a', 1, null, null)
+      db.integrate(obj)
+
+      let updateObj = new Object1(1, 'b', 2, 1, 'x')
+      let changes = db.integrate(updateObj)
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(1)
+      expect(objects[0]).to.equal(updateObj)
+
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(updateObj, { method: 'update', props: [ 'property1', 'property2', 'object1Id', 'object2Id' ] }))
+    })
+
+    it('should replace with a simple non-classed object when immutable replacing a classed object', function() {
+      let db = new ObjectDb(schema, true)
+      let obj = new Object1(1, 'a', 1, null, null)
+      db.integrate(obj)
+
+      let updateObj = {
+        id: 1,
+        property1: 'b',
+        property2: 2,
+        object1Id: 2,
+        object2Id: 'x'
+      }
+
+      let changes = db.integrate('Object1', updateObj)
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(1)
+      expect(objects[0]).to.equal(updateObj)
+
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change('Object1', updateObj, { method: 'update', props: [ 'property1', 'property2', 'object1Id', 'object2Id' ] }))
+    })
+
+    it('should replace with the given simple classed object when immutable replacing a non-classed object', function() {
+      let db = new ObjectDb(schema, true)
+      let obj = {
+        id: 1,
+        property1: 'a', 
+        property2: 1,
+        object1Id: null,
+        object2Id: null
+      }
+
+      db.integrate('Object1', obj)
+
+      let updateObj = new Object1(1, 'b', 2, 1, 'x')
+
+      let changes = db.integrate(updateObj)
+      expect(updateObj.object1).to.equal(updateObj)
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(1)
+      expect(objects[0]).to.equal(updateObj)
+
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change(updateObj, { method: 'update', props: [ 'property1', 'property2', 'object1Id', 'object2Id' ] }))
+    })
+
+    it('should replace with a simple non-classed object when immutable replacing a non-classed object', function() {
+      let db = new ObjectDb(schema, true)
+      let obj = {
+        id: 1,
+        property1: 'a', 
+        property2: 1,
+        object1Id: null,
+        object2Id: null
+      }
+
+      db.integrate('Object1', obj)
+
+      let updateObj = {
+        id: 1,
+        property1: 'b',
+        property2: 2,
+        object1Id: 2,
+        object2Id: 'x'
+      }
+
+      let changes = db.integrate('Object1', updateObj)
+
+      let objects = db.getObjects('Object1')
+      expect(objects).to.be.not.undefined
+      expect(objects.length).to.equal(1)
+      expect(objects[0]).to.equal(updateObj)
+
+      expect(changes.changes.length).to.equal(1)
+      expect(changes.changes[0]).to.deep.equal(
+        new Change('Object1', updateObj, { method: 'update', props: [ 'property1', 'property2', 'object1Id', 'object2Id' ] }))
+    })
+
+    it('should update a classed many-to-one relationship with a classed update object', function() {
+      let db = new ObjectDb(schema)
+      let manyObj = new ManyObject(1, 'x', 'a', null)
+      let obj1 = new Object1(1, 'b', 2)
+      db.integrate([ manyObj, obj1 ])
+
+      let updateManyObj = new ManyObject(1, 'x', 'b', 1)
+      let updateObj1 = new Object1(1, 'c', 3)
+      updateManyObj.object1 = updateObj1
+
+      let changes = db.integrate(updateManyObj)
+
+      expect(manyObj.property1).to.equal('b')
+      expect(obj1.property1).to.equal('c')
+      expect(obj1.property2).to.equal(3)
+
+      expect(changes.changes).to.deep.equal([
+        new Change(obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change(manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+      ])
+    })
+
+    it('should update a classed many-to-one relationship with a non-classed update object', function() {
+      let db = new ObjectDb(schema)
+      let manyObj = new ManyObject(1, 'x', 'a', null)
+      let obj1 = new Object1(1, 'b', 2)
+      db.integrate([ manyObj, obj1 ])
+
+      let updateManyObj = { object1Id: 1, object2Id: 'x', property1: 'b', object1Id2: 1 } as any
+      let updateObj1 = { id: 1, property1: 'c', property2: 3 }
+      updateManyObj.object1 = updateObj1
+
+      let changes = db.integrate('ManyObject', updateManyObj)
+
+      expect(manyObj.property1).to.equal('b')
+      expect(obj1.property1).to.equal('c')
+      expect(obj1.property2).to.equal(3)
+
+      expect(changes.changes).to.deep.equal([
+        new Change(obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change(manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+      ])
+    })
+
+    it('should update a non-classed many-to-one relationship with a classed update object', function() {
+      let db = new ObjectDb(schema)
+      let manyObj = { object1Id: 1, object2Id: 'x', property1: 'a', object1Id2: null, object1: undefined } as any
+      let obj1 = { id: 1, property1: 'b', property2: 2 }
+      manyObj['object1'] = obj1
+      db.integrate('ManyObject', manyObj)
+
+      let updateManyObj = new ManyObject(1, 'x', 'b', 1)
+      let updateObj1 = new Object1(1, 'c', 3)
+      updateManyObj.object1 = updateObj1
+
+      let changes = db.integrate(updateManyObj)
+
+      expect(manyObj.property1).to.equal('b')
+      expect(obj1.property1).to.equal('c')
+      expect(obj1.property2).to.equal(3)
+
+      expect(changes.changes).to.deep.equal([
+        new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+      ])
+    })
+
+    it('should update a non-classed many-to-one relationship with a non-classed update object', function() {
+      let db = new ObjectDb(schema)
+      let manyObj = { object1Id: 1, object2Id: 'x', property1: 'a', object1Id2: null, object1: undefined } as any
+      let obj1 = { id: 1, property1: 'b', property2: 2 }
+      manyObj['object1'] = obj1
+      db.integrate('ManyObject', manyObj)
+
+      let updateManyObj = { object1Id: 1, object2Id: 'x', property1: 'b', object1Id2: 1 } as any
+      let updateObj1 = { id: 1, property1: 'c', property2: 3 }
+      updateManyObj.object1 = updateObj1
+
+      let changes = db.integrate('ManyObject', updateManyObj)
+
+      expect(manyObj.property1).to.equal('b')
+      expect(obj1.property1).to.equal('c')
+      expect(obj1.property2).to.equal(3)
+
+      expect(changes.changes).to.deep.equal([
+        new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+      ])
+    })
+
+    it('should replace a classed many-to-one relationship with a classed update object when immutable option enabled', function() {
+      let db = new ObjectDb(schema, true)
+      let manyObj = new ManyObject(1, 'x', 'a', null)
+      let obj1 = new Object1(1, 'b', 2)
+      db.integrate([ manyObj, obj1 ])
+
+      let updateManyObj = new ManyObject(1, 'x', 'b', 1)
+      let updateObj1 = new Object1(1, 'c', 3)
+      updateManyObj.object1 = updateObj1
+
+      let changes = db.integrate(updateManyObj)
+
+      expect(updateManyObj.property1).to.equal('b')
+      expect(updateManyObj.object1).to.equal(updateObj1)
+      expect(updateManyObj.object12).to.equal(updateObj1)
+      expect(updateObj1.many).to.deep.equal([ updateManyObj ])
+      expect(updateObj1.property1).to.equal('c')
+      expect(updateObj1.property2).to.equal(3)
+
+      let object1s = db.getObjects('Object1')
+      expect(object1s.length).to.equal(1)
+      expect(object1s[0]).to.equal(updateObj1)
+
+      let manyObjects = db.getObjects('ManyObject')
+      expect(manyObjects.length).to.equal(1)
+      expect(manyObjects[0]).to.equal(updateManyObj)
+
+      expect(changes.changes).to.deep.equal([
+        new Change(updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change(updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+      ])
+    })
+
+    it('should update a classed many-to-one relationship with a non-classed update object', function() {
+      let db = new ObjectDb(schema)
+      let manyObj = new ManyObject(1, 'x', 'a', null)
+      let obj1 = new Object1(1, 'b', 2)
+      db.integrate([ manyObj, obj1 ])
+
+      let updateManyObj = { object1Id: 1, object2Id: 'x', property1: 'b', object1Id2: 1 } as any
+      let updateObj1 = { id: 1, property1: 'c', property2: 3 }
+      updateManyObj.object1 = updateObj1
+
+      let changes = db.integrate('ManyObject', updateManyObj)
+
+      expect(manyObj.property1).to.equal('b')
+      expect(obj1.property1).to.equal('c')
+      expect(obj1.property2).to.equal(3)
+
+      expect(changes.changes).to.deep.equal([
+        new Change(obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change(manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+      ])
+    })
+
+    it('should update a non-classed many-to-one relationship with a classed update object', function() {
+      let db = new ObjectDb(schema)
+      let manyObj = { object1Id: 1, object2Id: 'x', property1: 'a', object1Id2: null, object1: undefined } as any
+      let obj1 = { id: 1, property1: 'b', property2: 2 }
+      manyObj['object1'] = obj1
+      db.integrate('ManyObject', manyObj)
+
+      let updateManyObj = new ManyObject(1, 'x', 'b', 1)
+      let updateObj1 = new Object1(1, 'c', 3)
+      updateManyObj.object1 = updateObj1
+
+      let changes = db.integrate(updateManyObj)
+
+      expect(manyObj.property1).to.equal('b')
+      expect(obj1.property1).to.equal('c')
+      expect(obj1.property2).to.equal(3)
+
+      expect(changes.changes).to.deep.equal([
+        new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+      ])
+    })
+
+    it('should update a non-classed many-to-one relationship with a non-classed update object', function() {
+      let db = new ObjectDb(schema)
+      let manyObj = { object1Id: 1, object2Id: 'x', property1: 'a', object1Id2: null, object1: undefined } as any
+      let obj1 = { id: 1, property1: 'b', property2: 2 }
+      manyObj['object1'] = obj1
+      db.integrate('ManyObject', manyObj)
+
+      let updateManyObj = { object1Id: 1, object2Id: 'x', property1: 'b', object1Id2: 1 } as any
+      let updateObj1 = { id: 1, property1: 'c', property2: 3 }
+      updateManyObj.object1 = updateObj1
+
+      let changes = db.integrate('ManyObject', updateManyObj)
+
+      expect(manyObj.property1).to.equal('b')
+      expect(obj1.property1).to.equal('c')
+      expect(obj1.property2).to.equal(3)
+
+      expect(changes.changes).to.deep.equal([
+        new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+      ])
     })
   })
 
@@ -591,9 +921,8 @@ describe('ObjectDb', function() {
       let db = new ObjectDb(schema)
       let obj = new Object1(1, 'a', 1, null)
       
-      let changes = db.wire(obj)
+      db.wire(obj)
 
-      expect(changes.changes).to.be.empty
       expect(obj).to.deep.equal(new Object1(1, 'a', 1, null))
     })
 
@@ -606,14 +935,7 @@ describe('ObjectDb', function() {
 
       let many = new ManyObject(1, 'x', 'a')
 
-      let changes = db.wire(many)
-
-      expect(changes.changes.length).to.equal(3)
-      expect(changes.changes).to.deep.equal([
-        new Change(many, { method: 'update', props: ['object1', 'object2'] }),
-        new Change(obj1, { method: 'update', props: ['many'] }),
-        new Change(obj2, { method: 'update', props: ['many'] })
-      ])
+      db.wire(many)
 
       expect(obj1.many!.length).to.equal(1)
       expect(obj1.many![0]).to.equal(many)
@@ -632,12 +954,7 @@ describe('ObjectDb', function() {
 
       let obj2 = new Object1(2, 'b', 2, 1, null)
       
-      let changes = db.wire(obj2)
-
-      expect(changes.changes).to.deep.equal([
-        new Change(obj2, { method: 'update', props: [ 'object1' ] }),
-        new Change(obj1, { method: 'update', props: [ 'object1' ] })
-      ])
+      db.wire(obj2)
 
       expect(obj2.object1Id).to.equal(1)
       expect(obj2.object1).to.equal(obj1)
@@ -649,9 +966,8 @@ describe('ObjectDb', function() {
       let db = new ObjectDb(schema)
       let obj = new Object1(1, 'a', 1, null)
       
-      let changes = db.unwire(obj)
+      db.unwire(obj)
 
-      expect(changes.changes).to.be.empty
       expect(obj).to.deep.equal(new Object1(1, 'a', 1, null))
     })
 
@@ -663,14 +979,7 @@ describe('ObjectDb', function() {
 
       db.integrate([ obj1, obj2, many ])
 
-      let changes = db.unwire(many)
-
-      expect(changes.changes.length).to.equal(3)
-      expect(changes.changes).to.deep.equal([
-        new Change(obj1, { method: 'update', props: [ 'many' ] }),
-        new Change(obj2, { method: 'update', props: [ 'many' ] }),
-        new Change(many, { method: 'update', props: [ 'object1', 'object2' ] }),
-      ])
+      db.unwire(many)
 
       expect(obj1.many).to.be.empty
       expect(obj2.many).to.be.empty
@@ -685,12 +994,7 @@ describe('ObjectDb', function() {
       
       db.integrate([ obj1, obj2 ])
       
-      let changes = db.unwire(obj2)
-
-      expect(changes.changes).to.deep.equal([
-        new Change(obj1, { method: 'update', props: [ 'object1' ] }),
-        new Change(obj2, { method: 'update', props: [ 'object1' ] }),
-      ])
+      db.unwire(obj2)
 
       expect(obj1.object1Id).to.equal(2)
       expect(obj1.object1).to.be.null
