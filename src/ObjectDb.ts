@@ -13,7 +13,6 @@ export default class ObjectDb {
 
   fetches: (() => Promise<any>)[] = []
   objects: {[ entityName: string ]: any[] } = {}
-  idProps: {[ entityName: string ]: string[] } = {}
 
   constructor(schema: Schema, immutableObjects: boolean = false) {
     this.schema = schema
