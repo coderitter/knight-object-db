@@ -1,6 +1,6 @@
 {
   "name": "mega-nice-object-db",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A mega nice database for objects",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
