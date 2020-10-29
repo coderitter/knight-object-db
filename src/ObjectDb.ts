@@ -4,7 +4,7 @@ import { matchCriteria } from 'mega-nice-criteria-matcher'
 import Log from 'mega-nice-log'
 import { idProps, Schema } from './Schema'
 
-let log = new Log('ObjectDb.ts', 'silent')
+let log = new Log('ObjectDb.ts')
 
 export default class ObjectDb {
 
@@ -191,8 +191,12 @@ export default class ObjectDb {
               continue
             }
 
-            if (existingObject[prop] !== object[prop]) {
+            if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
               updatedProps.push(prop.toString())
+            }
+
+            if (object[prop] === undefined && existingObject[prop] !== undefined) {
+              object[prop] = existingObject[prop]
             }
           }
         }
@@ -204,7 +208,7 @@ export default class ObjectDb {
               continue
             }
 
-            if (existingObject[prop] !== object[prop]) {
+            if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
               updatedProps.push(prop.toString())
               existingObject[prop] = object[prop]
               l.debug(`${prop} = ${object[prop]}`)
@@ -250,11 +254,18 @@ export default class ObjectDb {
         }
 
         if (rootMethodCall) {
+          l.debug('Wiring all changed objects...')
+
           if (this.immutableObjects) {
             this.wire(entityName, object)
           }
-          else {
-            this.wire(entityName, existingObject)
+
+          for (let change of changes.changes) {
+            if (change.entityName != undefined && change.entity != undefined) {
+              l.debug(`Wiring '${change.entityName}'...`)
+              this.wire(change.entityName, change.entity)
+              l.returning(`Returning from wiring '${change.entityName}'...`)
+            }
           }
         }
 
@@ -524,13 +535,11 @@ export default class ObjectDb {
     }
 
     if (entity.relationships != undefined) {
-      l.debug('Iterating through relationships...')
+      l.debug('Wiring relationships...')
 
       for (let relationshipName of Object.keys(entity.relationships)) {
-        l.var('relationshipName', relationshipName)
-
         let relationship = entity.relationships[relationshipName]
-        l.varInsane('relationship', relationship)
+        l.debug('Wiring next relationship...', relationshipName, relationship)
 
         let criteria = {} as ReadCriteria
         criteria[relationship.otherId] = object[relationship.thisId]
@@ -544,7 +553,8 @@ export default class ObjectDb {
         }
 
         if (relationship.manyToOne === true) {
-          l.debug('Relationship is many-to-one', object[relationshipName])
+          l.debug('Relationship is many-to-one')
+          l.varInsane(`object.${relationshipName}`, object[relationshipName])
 
           if (object[relationshipName] !== relationshipObjects[0]) {
             l.debug('Setting relationship object on many-to-one... ')
@@ -555,7 +565,8 @@ export default class ObjectDb {
           }
         }
         else if (relationship.oneToMany === true) {
-          l.debug('Relationship is one-to-many', object[relationshipName])
+          l.debug('Relationship is one-to-many')
+          l.varInsane(`object.${relationshipName}`, object[relationshipName])
 
           if (this.immutableObjects && object[relationshipName] instanceof Array) {
             l.debug('Objects should be treated immutable. Cloning array...')
