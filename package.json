@@ -1,6 +1,6 @@
 {
   "name": "mega-nice-object-db",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "A mega nice database for objects",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -8,7 +8,7 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "mega-nice-change": "^3.1.2",
+    "mega-nice-change": "^3.2.1",
     "mega-nice-criteria": "^5.2.0",
     "mega-nice-criteria-matcher": "^5.0.1",
     "mega-nice-log": "^3.0.1"
