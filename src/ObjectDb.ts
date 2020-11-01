@@ -4,7 +4,7 @@ import { matchCriteria } from 'mega-nice-criteria-matcher'
 import Log from 'mega-nice-log'
 import { idProps, Schema } from './Schema'
 
-let log = new Log('ObjectDb.ts')
+let log = new Log('mega-nice-object-db/ObjectDb.ts')
 
 export default class ObjectDb {
 
