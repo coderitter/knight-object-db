@@ -101,7 +101,7 @@ export default class ObjectDb {
       l.user('Given object is an array. Integrating every object of that array...')
 
       for (let obj of object) {
-        l.var('obj', obj)
+        l.user('Integrating next object of given array...', obj)
         l.user('Going into recursion...')
         if (entityName != undefined) {
           this.integrate(entityName, obj, changes)
@@ -109,7 +109,7 @@ export default class ObjectDb {
         else {
           this.integrate(obj, changes)
         }
-        l.returning('Returning from recursion...')
+        l.returning('Returning from recursion. Continue to integrate all objects from given array...')
       }
 
       if (rootMethodCall) {
@@ -161,7 +161,7 @@ export default class ObjectDb {
         }
       }
 
-      l.var('criteria', criteria)
+      l.user('Determining existing objects using criteria', criteria)
 
       let existingObjects: any[] = this.read(entityName, criteria)
       l.var('existingObjects', existingObjects)
@@ -212,6 +212,10 @@ export default class ObjectDb {
               existingObject[prop] = object[prop]
               l.user(`${prop} = ${object[prop]}`)
             }
+
+            if (updatedProps.length == 0) {
+              l.user('Nothing has changed. Updated nothing...')
+            }
           }
         }
 
@@ -240,7 +244,7 @@ export default class ObjectDb {
 
             l.user(`Integrating '${relationshipName}'. Going into recursion...`)
             this.integrate(relationship.otherEntity, object[relationshipName], changes)
-            l.returning('Returning from recursion...')
+            l.returning('Returning from recursion. Continue to integrate relationships of...', object)
           }
         }
 
@@ -281,7 +285,7 @@ export default class ObjectDb {
     changes.changes.push(change)
 
     if (entity.relationships != undefined) {
-      l.user('Creating all relationships...')
+      l.user('Integrating all relationships...')
 
       for (let relationshipName of Object.keys(entity.relationships)) {
         if (typeof object[relationshipName] != 'object' || object[relationshipName] === null) {
@@ -292,7 +296,7 @@ export default class ObjectDb {
         let relationship = entity.relationships[relationshipName]
         l.user(`Integrating relationship '${relationshipName}'. Going into recursion...`)
         this.integrate(relationship.otherEntity, object[relationshipName], changes)
-        l.returning('Returning from recursion...')
+        l.returning('Returning from recursion. Continue to integrate relationships of...', object)
       }
     }
     else {
