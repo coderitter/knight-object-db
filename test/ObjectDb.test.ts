@@ -262,6 +262,62 @@ describe('ObjectDb', function() {
       expect(objectManies[1].object12).to.equal(obj12)
     })
 
+    it('should replace different objects representing the same entity with just one', function() {
+      let db = new ObjectDb(schema)
+      let obj = {
+        id: 1,
+        many: [
+          {
+            object1Id: 1,
+            object2Id: 'x',
+            object2: {
+              id: 'x',
+              many: [
+                {
+                  object1Id: 1,
+                  object2Id: 'x'
+                }
+              ]
+            }
+          }
+        ]
+      }
+
+      db.integrate('Object1', obj)
+
+      expect(obj.many.length).to.equal(1)
+      expect(obj.many[0].object2.many.length).to.equal(1)
+      expect(obj.many[0]).to.equal(obj.many[0].object2.many[0])
+    })
+
+    it('should replace different objects representing the same entity with just one', function() {
+      let db = new ObjectDb(schema)
+      let obj = {
+        id: 1,
+        many: [
+          {
+            object1Id: 1,
+            object2Id: 'x',
+            object2: {
+              id: 'x',
+              many: [
+                {
+                  object1Id: 1,
+                  object2Id: 'x'
+                }
+              ]
+            }
+          }
+        ]
+      }
+
+      db.integrate('Object1', obj)
+
+      expect(obj.many.length).to.equal(1)
+      expect(obj.many[0].object2.many.length).to.equal(1)
+      expect(obj.many[0]).to.equal(obj.many[0].object2.many[0])
+    })
+
     it('should update a simple classed object with a classed object', function() {
       let db = new ObjectDb(schema)
       let obj = new Object1(1, 'a', 1, null, null)
@@ -485,8 +541,8 @@ describe('ObjectDb', function() {
       expect(obj1.property2).to.equal(3)
 
       expect(changes.changes).to.deep.equal([
-        new Change(obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
         new Change(manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+        new Change(obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
       ])
     })
 
@@ -507,8 +563,8 @@ describe('ObjectDb', function() {
       expect(obj1.property2).to.equal(3)
 
       expect(changes.changes).to.deep.equal([
-        new Change(obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
         new Change(manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+        new Change(obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
       ])
     })
 
@@ -530,8 +586,8 @@ describe('ObjectDb', function() {
       expect(obj1.property2).to.equal(3)
 
       expect(changes.changes).to.deep.equal([
-        new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
         new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+        new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
       ])
     })
 
@@ -553,8 +609,8 @@ describe('ObjectDb', function() {
       expect(obj1.property2).to.equal(3)
 
       expect(changes.changes).to.deep.equal([
-        new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
         new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+        new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
       ])
     })
 
@@ -586,8 +642,8 @@ describe('ObjectDb', function() {
       expect(manyObjects[0]).to.equal(updateManyObj)
 
       expect(changes.changes).to.deep.equal([
-        new Change(updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
         new Change(updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+        new Change(updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
       ])
     })
 
@@ -619,8 +675,8 @@ describe('ObjectDb', function() {
       expect(manyObjects[0]).to.equal(updateManyObj)
 
       expect(changes.changes).to.deep.equal([
-        new Change('Object1', updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
         new Change('ManyObject', updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+        new Change('Object1', updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
       ])
     })
 
@@ -653,8 +709,8 @@ describe('ObjectDb', function() {
       expect(manyObjects[0]).to.equal(updateManyObj)
 
       expect(changes.changes).to.deep.equal([
-        new Change(updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
         new Change(updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+        new Change(updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
       ])
     })
 
@@ -687,8 +743,8 @@ describe('ObjectDb', function() {
       expect(manyObjects[0]).to.equal(updateManyObj)
 
       expect(changes.changes).to.deep.equal([
-        new Change('Object1', updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
         new Change('ManyObject', updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
+        new Change('Object1', updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
       ])
     })
 
@@ -710,8 +766,8 @@ describe('ObjectDb', function() {
       expect(manyObj.object12).to.equal(obj1)
 
       expect(changes.changes).to.deep.equal([
-        new Change(manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
         new Change(obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change(manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
       ])
     })
 
@@ -733,8 +789,8 @@ describe('ObjectDb', function() {
       expect(manyObj.object12).to.equal(obj1)
 
       expect(changes.changes).to.deep.equal([
-        new Change(manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
         new Change(obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change(manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
       ])
     })
 
@@ -757,8 +813,8 @@ describe('ObjectDb', function() {
       expect(manyObj.object12).to.equal(obj1)
 
       expect(changes.changes).to.deep.equal([
-        new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
         new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
       ])
     })
 
@@ -781,8 +837,8 @@ describe('ObjectDb', function() {
       expect(manyObj.object12).to.equal(obj1)
 
       expect(changes.changes).to.deep.equal([
-        new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
         new Change('Object1', obj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change('ManyObject', manyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
       ])
     })
 
@@ -814,8 +870,8 @@ describe('ObjectDb', function() {
       expect(manyObjects[0]).to.equal(updateManyObj)
 
       expect(changes.changes).to.deep.equal([
-        new Change(updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
         new Change(updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change(updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
       ])
     })
 
@@ -845,8 +901,8 @@ describe('ObjectDb', function() {
       expect(manyObjects[0]).to.equal(updateManyObj)
 
       expect(changes.changes).to.deep.equal([
-        new Change('ManyObject', updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
         new Change('Object1', updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change('ManyObject', updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
       ])
     })
 
@@ -877,8 +933,8 @@ describe('ObjectDb', function() {
       expect(manyObjects[0]).to.equal(updateManyObj)
 
       expect(changes.changes).to.deep.equal([
-        new Change(updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
         new Change(updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change(updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
       ])
     })
 
@@ -909,8 +965,8 @@ describe('ObjectDb', function() {
       expect(manyObjects[0]).to.equal(updateManyObj)
 
       expect(changes.changes).to.deep.equal([
-        new Change('ManyObject', updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
         new Change('Object1', updateObj1, { method: 'update', props: [ 'property1', 'property2' ] }),
+        new Change('ManyObject', updateManyObj, { method: 'update', props: [ 'property1', 'object1Id2' ] }),
       ])
     })
 
@@ -1024,8 +1080,8 @@ describe('ObjectDb', function() {
       expect(object1s[2]).to.equal(obj13)
 
       expect(changes.changes).to.deep.equal([
-        new Change(obj13, 'create'),
         new Change(obj11, { method: 'update', props: [ 'object1Id' ] }),
+        new Change(obj13, 'create'),
       ])
     })
 
@@ -1051,8 +1107,8 @@ describe('ObjectDb', function() {
       expect(object1s[2]).to.equal(obj13)
 
       expect(changes.changes).to.deep.equal([
-        new Change(obj13, 'create'),
         new Change(updateObj11, { method: 'update', props: [ 'object1Id' ] }),
+        new Change(obj13, 'create'),
       ])
     })
 
@@ -1098,7 +1154,7 @@ describe('ObjectDb', function() {
 
       let changes = db.integrate(updateObj1)
 
-      expect(updateObj1.many).to.deep.equal([ many2, many1 ])
+      expect(updateObj1.many).to.deep.equal([ many1, many2 ])
 
       let object1s = db.getObjects('Object1')
       expect(object1s.length).to.equal(1)

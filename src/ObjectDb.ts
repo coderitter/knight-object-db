@@ -150,139 +150,88 @@ export default class ObjectDb {
       throw new Error(`Entity '${entityName}' not contained in schema`)
     }
 
-    let idProps = entity.idProps
+    let criteria: ReadCriteria = {}
 
-    if (idProps) {
-      let criteria: ReadCriteria = {}
-
-      for (let idProp of idProps) {
-        if (object[idProp] !== undefined) {
-          criteria[idProp] = object[idProp]
-        }
-      }
-
-      l.user('Determining existing objects using criteria', criteria)
-
-      let existingObjects: any[] = this.read(entityName, criteria)
-      l.var('existingObjects', existingObjects)
-
-      if (existingObjects.length > 1) {
-        throw new Error('There is more than one object representing the same entity in the database')
-      }
-
-      let updatedProps: string[] = []
-
-      if (existingObjects.length == 1) {
-        l.user('The entity represented by the given object is already in the database but represented by a different object. Updating...')
-        let existingObject = existingObjects[0]
-
-        if (this.immutableObjects === true) {
-          l.user('Database is set to immutable. Replacing...')
-          this.unwire(entityName, existingObject)
-
-          let index = objects.indexOf(existingObject)
-          objects.splice(index, 1)
-
-          objects.push(object)
-
-          for (let prop of Object.keys(existingObject)) {
-            if (entity.relationships != undefined && prop in entity.relationships) {
-              continue
-            }
-
-            if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
-              updatedProps.push(prop.toString())
-            }
-
-            if (object[prop] === undefined && existingObject[prop] !== undefined) {
-              object[prop] = existingObject[prop]
-            }
-          }
-        }
-        else {
-          l.user('Database is not set to immutable. Copying all values to already existing object...')
-          
-          for (let prop of Object.keys(object)) {
-            if (entity.relationships != undefined && prop in entity.relationships) {
-              continue
-            }
-
-            if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
-              updatedProps.push(prop.toString())
-              existingObject[prop] = object[prop]
-              l.user(`${prop} = ${object[prop]}`)
-            }
-
-            if (updatedProps.length == 0) {
-              l.user('Nothing has changed. Updated nothing...')
-            }
-          }
-        }
-
-        if (entity.relationships != undefined) {
-          l.user('Integrating relationships...')
-
-          for (let relationshipName of Object.keys(entity.relationships)) {
-            l.var(relationshipName, object[relationshipName])
-
-            if (object[relationshipName] == undefined) {
-              l.dev('Relationship is either null or undefined. Continuing...')
-              continue
-            }
-
-            if (typeof object[relationshipName] != 'object') {
-              l.dev('Value of relationship is not an object. Continuing...')
-              continue
-            }
-
-            let relationship = entity.relationships[relationshipName]
-            let otherEntity = this.schema[relationship.otherEntity]
-            
-            if (otherEntity == undefined) {
-              throw new Error(`Entity '${relationship.otherEntity}' not contained in schema`)
-            }
-
-            l.user(`Integrating '${relationshipName}'. Going into recursion...`)
-            this.integrate(relationship.otherEntity, object[relationshipName], changes)
-            l.returning('Returning from recursion. Continue to integrate relationships of...', object)
-          }
-        }
-
-        if (updatedProps.length > 0) {
-          let updatedObject = this.immutableObjects ? object : existingObject
-          let change = new Change(entityName, updatedObject, { method: 'update', props: updatedProps })
-          l.user('Properties have changed', updatedProps)
-          l.user('Adding change to list of changes...', change)
-          changes.add(change)
-        }
-
-        if (rootMethodCall) {
-          l.user('Wiring all changed objects...')
-
-          if (this.immutableObjects) {
-            this.wire(entityName, object)
-          }
-
-          for (let change of changes.changes) {
-            if (change.entityName != undefined && change.entity != undefined) {
-              l.user(`Wiring '${change.entityName}'...`)
-              this.wire(change.entityName, change.entity)
-              l.returning(`Returning from wiring '${change.entityName}'...`)
-            }
-          }
-        }
-
-        l.returning('Returning changes...', changes)
-        return changes
+    for (let idProp of entity.idProps) {
+      if (object[idProp] !== undefined) {
+        criteria[idProp] = object[idProp]
       }
     }
 
-    l.user('Adding object to database...')
-    objects.push(object)
-    let change = new Change(entityName, object, 'create')
-    
-    l.user('Created a change object which is pushed into the list of changes...', change)
-    changes.changes.push(change)
+    l.user('Determining existing objects using criteria', criteria)
+
+    let existingObjects: any[] = this.read(entityName, criteria)
+    l.var('existingObjects', existingObjects)
+
+    if (existingObjects.length > 1) {
+      throw new Error('There is more than one object representing the same entity in the database')
+    }
+
+    let updatedProps: string[] = []
+
+    if (existingObjects.length == 1) {
+      l.user('The entity represented by the given object is already in the database but represented by a different object. Updating...')
+      let existingObject = existingObjects[0]
+
+      if (this.immutableObjects === true) {
+        l.user('Database is set to immutable. Replacing...')
+        this.unwire(entityName, existingObject)
+
+        let index = objects.indexOf(existingObject)
+        objects.splice(index, 1)
+
+        objects.push(object)
+
+        for (let prop of Object.keys(existingObject)) {
+          if (entity.relationships != undefined && prop in entity.relationships) {
+            continue
+          }
+
+          if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
+            updatedProps.push(prop.toString())
+          }
+
+          if (object[prop] === undefined && existingObject[prop] !== undefined) {
+            object[prop] = existingObject[prop]
+          }
+        }
+      }
+      else {
+        l.user('Database is not set to immutable. Copying all values to already existing object...')
+        
+        for (let prop of Object.keys(object)) {
+          if (entity.relationships != undefined && prop in entity.relationships) {
+            continue
+          }
+
+          if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
+            updatedProps.push(prop.toString())
+            existingObject[prop] = object[prop]
+            l.user(`${prop} = ${object[prop]}`)
+          }
+
+          if (updatedProps.length == 0) {
+            l.user('Nothing has changed. Updated nothing...')
+          }
+        }
+      }
+
+      if (updatedProps.length > 0) {
+        let updatedObject = this.immutableObjects ? object : existingObject
+        let change = new Change(entityName, updatedObject, { method: 'update', props: updatedProps })
+        l.user('Properties have changed', updatedProps)
+        l.user('Adding change to list of changes...', change)
+        changes.add(change)
+      }
+    }
+    else {
+      l.user('Adding object to database...')
+      objects.push(object)
+      let change = new Change(entityName, object, 'create')
+      
+      l.user('Created a change object which is pushed into the list of changes...', change)
+      changes.changes.push(change)  
+    }
 
     if (entity.relationships != undefined) {
       l.user('Integrating all relationships...')
@@ -296,7 +245,12 @@ export default class ObjectDb {
         let relationship = entity.relationships[relationshipName]
         l.user(`Integrating relationship '${relationshipName}'. Going into recursion...`)
         this.integrate(relationship.otherEntity, object[relationshipName], changes)
-        l.returning('Returning from recursion. Continue to integrate relationships of...', object)
+        l.returning('Returning from recursion started for object...', object)
+
+        if (existingObjects.length == 0 || existingObjects.length == 1 && this.immutableObjects) {
+          l.dev('Erasing relationship after integration into the database...', relationshipName)
+          object[relationshipName] = undefined  
+        }
       }
     }
     else {
@@ -305,6 +259,10 @@ export default class ObjectDb {
 
     if (rootMethodCall) {
       l.user('Wiring all changed objects...')
+
+      if (existingObjects.length == 1 && this.immutableObjects) {
+        this.wire(entityName, object)
+      }
 
       for (let change of changes.changes) {
         if (change.entityName != undefined && change.entity != undefined) {
