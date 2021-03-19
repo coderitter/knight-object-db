@@ -9,14 +9,12 @@ let log = new Log('mega-nice-object-db/ObjectDb.ts')
 export default class ObjectDb {
 
   schema: Schema
-  immutableObjects: boolean
 
   fetches: (() => Promise<any>)[] = []
   objects: {[ entityName: string ]: any[] } = {}
 
-  constructor(schema: Schema, immutableObjects: boolean = false) {
+  constructor(schema: Schema) {
     this.schema = schema
-    this.immutableObjects = immutableObjects
   }
 
   fetch(fetch: () => Promise<any>): void {
@@ -173,52 +171,26 @@ export default class ObjectDb {
       l.user('The entity represented by the given object is already in the database but represented by a different object. Updating...')
       let existingObject = existingObjects[0]
 
-      if (this.immutableObjects === true) {
-        l.user('Database is set to immutable. Replacing...')
-        this.unwire(entityName, existingObject)
-
-        let index = objects.indexOf(existingObject)
-        objects.splice(index, 1)
-
-        objects.push(object)
-
-        for (let prop of Object.keys(existingObject)) {
-          if (entity.relationships != undefined && prop in entity.relationships) {
-            continue
-          }
-
-          if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
-            updatedProps.push(prop.toString())
-          }
-
-          if (object[prop] === undefined && existingObject[prop] !== undefined) {
-            object[prop] = existingObject[prop]
-          }
+      l.user('Database is not set to immutable. Copying all values to already existing object...')
+      
+      for (let prop of Object.keys(object)) {
+        if (entity.relationships != undefined && prop in entity.relationships) {
+          continue
         }
-      }
-      else {
-        l.user('Database is not set to immutable. Copying all values to already existing object...')
-        
-        for (let prop of Object.keys(object)) {
-          if (entity.relationships != undefined && prop in entity.relationships) {
-            continue
-          }
 
-          if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
-            updatedProps.push(prop.toString())
-            existingObject[prop] = object[prop]
-            l.user(`${prop} = ${object[prop]}`)
-          }
+        if (object[prop] !== undefined && existingObject[prop] !== object[prop]) {
+          updatedProps.push(prop.toString())
+          existingObject[prop] = object[prop]
+          l.user(`${prop} = ${object[prop]}`)
+        }
 
-          if (updatedProps.length == 0) {
-            l.user('Nothing has changed. Updated nothing...')
-          }
+        if (updatedProps.length == 0) {
+          l.user('Nothing has changed. Updated nothing...')
         }
       }
 
       if (updatedProps.length > 0) {
-        let updatedObject = this.immutableObjects ? object : existingObject
-        let change = new Change(entityName, updatedObject, { method: 'update', props: updatedProps })
+        let change = new Change(entityName, existingObject, { method: 'update', props: updatedProps })
         l.user('Properties have changed', updatedProps)
         l.user('Adding change to list of changes...', change)
         changes.add(change)
@@ -247,7 +219,7 @@ export default class ObjectDb {
         this.integrate(relationship.otherEntity, object[relationshipName], changes)
         l.returning('Returning from recursion started for object...', object)
 
-        if (existingObjects.length == 0 || existingObjects.length == 1 && this.immutableObjects) {
+        if (existingObjects.length == 0) {
           l.dev('Erasing relationship after integration into the database...', relationshipName)
           object[relationshipName] = undefined  
         }
@@ -259,10 +231,6 @@ export default class ObjectDb {
 
     if (rootMethodCall) {
       l.user('Wiring all changed objects...')
-
-      if (existingObjects.length == 1 && this.immutableObjects) {
-        this.wire(entityName, object)
-      }
 
       for (let change of changes.changes) {
         if (change.entityName != undefined && change.entity != undefined) {
@@ -529,11 +497,6 @@ export default class ObjectDb {
           l.user('Relationship is one-to-many')
           l.var(`object.${relationshipName}`, object[relationshipName])
 
-          if (this.immutableObjects && object[relationshipName] instanceof Array) {
-            l.user('Objects should be treated immutable. Cloning array...')
-            object[relationshipName] = object[relationshipName].slice()
-          }
-
           if (! (object[relationshipName] instanceof Array)) {
             l.user('Initializing empty array...')
             object[relationshipName] = []
@@ -602,11 +565,6 @@ export default class ObjectDb {
                 }
 
                 l.var('index', index)
-
-                if (this.immutableObjects && index > -1) {
-                  l.user('Objects should be treated immutable. Cloning array...')
-                  otherObject[otherRelationshipName] = otherObject[otherRelationshipName].slice()
-                }
 
                 if (! (otherObject[otherRelationshipName] instanceof Array)) {
                   l.user('Initializing empty array...')
@@ -709,11 +667,6 @@ export default class ObjectDb {
                   let index = otherObject[otherRelationshipName].indexOf(object)
 
                   if (index > -1) {
-                    if (this.immutableObjects) {
-                      l.user('Objects should be treated immutable. Cloning array...')
-                      otherObject[otherRelationshipName] = otherObject[otherRelationshipName].slice()
-                    }
-
                     l.user('Removing object on other object\'s one-to-many relationship... ' + otherRelationshipName)
                     otherObject[otherRelationshipName].splice(index, 1)
                   }
