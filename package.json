@@ -1,18 +1,12 @@
 {
-  "name": "mega-nice-object-db",
-  "version": "3.0.0",
-  "description": "A mega nice database for objects",
+  "name": "knight-object-db",
+  "version": "1.0.0",
+  "description": "An in-memory database for objects",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
     "lib/**/*"
   ],
-  "dependencies": {
-    "mega-nice-change": "^3.2.3",
-    "mega-nice-criteria": "^5.3.1",
-    "mega-nice-criteria-matcher": "^5.1.0",
-    "mega-nice-log": "^3.1.0"
-  },
   "devDependencies": {
     "@types/chai": "^4.2.14",
     "@types/mocha": "^5.2.7",
@@ -28,14 +22,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/c0deritter/mega-nice-object-db.git"
+    "url": "git+https://github.com/c0deritter/knight-object-db.git"
   },
   "keywords": [
     ""
   ],
   "author": "Coderitter GmbH",
   "bugs": {
-    "url": "https://github.com/c0deritter/mega-nice-object-db/issues"
+    "url": "https://github.com/c0deritter/knight-object-db/issues"
   },
-  "homepage": "https://github.com/c0deritter/mega-nice-object-db#readme"
+  "homepage": "https://github.com/c0deritter/knight-object-db#readme",
+  "dependencies": {
+    "knight-change": "^1.0.0",
+    "knight-criteria": "^1.0.0",
+    "knight-criteria-matcher": "^1.0.0",
+    "knight-log": "^1.0.0"
+  }
 }

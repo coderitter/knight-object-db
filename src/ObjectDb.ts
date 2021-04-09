@@ -1,35 +1,19 @@
-import { Change, Changes } from 'mega-nice-change'
-import { ReadCriteria } from 'mega-nice-criteria'
-import { matchCriteria } from 'mega-nice-criteria-matcher'
-import Log from 'mega-nice-log'
+import { Change, Changes } from 'knight-change'
+import { ReadCriteria } from 'knight-criteria'
+import { matchCriteria } from 'knight-criteria-matcher'
+import Log from 'knight-log'
 import { idProps, Schema } from './Schema'
 
-let log = new Log('mega-nice-object-db/ObjectDb.ts')
+let log = new Log('knight-object-db/ObjectDb.ts')
 
 export default class ObjectDb {
 
   schema: Schema
 
-  fetches: (() => Promise<any>)[] = []
   objects: {[ entityName: string ]: any[] } = {}
 
   constructor(schema: Schema) {
     this.schema = schema
-  }
-
-  fetch(fetch: () => Promise<any>): void {
-    this.fetches.push(fetch)
-  }
-
-  async fetchAll(): Promise<void> {
-    let promises: Promise<any>[] = []
-
-    for (let fetch of this.fetches) {
-      let promise = fetch()
-      promises.push(promise)
-    }
-
-    await Promise.all(promises)
   }
 
   getObjects(entityName: string): any[]

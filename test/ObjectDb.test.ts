@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { Change } from 'mega-nice-change'
+import { Change } from 'knight-change'
 import 'mocha'
 import { ObjectDb } from '../src'
 import { ManyObject, Object1, Object2, schema } from './TestSchema'
