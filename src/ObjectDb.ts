@@ -174,7 +174,7 @@ export default class ObjectDb {
       }
 
       if (updatedProps.length > 0) {
-        let change = new Change(entityName, existingObject, { method: 'update', props: updatedProps })
+        let change = new Change(entityName, existingObject, 'update', updatedProps)
         l.dev('Properties have changed', updatedProps)
         l.dev('Adding change to list of changes...', change)
         changes.add(change)
@@ -364,7 +364,7 @@ export default class ObjectDb {
     l.dev('index', index)
     objects.splice(index, 1)
 
-    let change = new Change(entityName, toDelete, [ 'delete' ])
+    let change = new Change(entityName, toDelete, 'delete')
     l.dev('Adding change to list of changes...', change)
     changes.add(change)
 

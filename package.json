@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/c0deritter/knight-object-db#readme",
   "dependencies": {
-    "knight-change": "^1.0.0",
+    "knight-change": "^2.0.0",
     "knight-criteria": "^1.0.0",
     "knight-criteria-matcher": "^1.0.0",
     "knight-log": "^2.0.0-rc.3"
