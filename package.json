@@ -36,6 +36,6 @@
     "knight-change": "^1.0.0",
     "knight-criteria": "^1.0.0",
     "knight-criteria-matcher": "^1.0.0",
-    "knight-log": "^1.0.2"
+    "knight-log": "^2.0.0-rc.3"
   }
 }
