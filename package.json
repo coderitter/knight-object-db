@@ -22,16 +22,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/c0deritter/knight-object-db.git"
+    "url": "git+https://github.com/coderitter/knight-object-db.git"
   },
   "keywords": [
     ""
   ],
   "author": "Coderitter GmbH",
   "bugs": {
-    "url": "https://github.com/c0deritter/knight-object-db/issues"
+    "url": "https://github.com/coderitter/knight-object-db/issues"
   },
-  "homepage": "https://github.com/c0deritter/knight-object-db#readme",
+  "homepage": "https://github.com/coderitter/knight-object-db#readme",
   "dependencies": {
     "knight-change": "^2.0.0",
     "knight-criteria": "^2.2.1",
