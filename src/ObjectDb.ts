@@ -1,5 +1,5 @@
 import { Change, Changes } from 'knight-change'
-import { ReadCriteria } from 'knight-criteria'
+import { Criteria } from 'knight-criteria'
 import { matchCriteria } from 'knight-criteria-matcher'
 import { Log } from 'knight-log'
 import { idProps, Schema } from './Schema'
@@ -132,7 +132,7 @@ export default class ObjectDb {
       throw new Error(`Entity '${entityName}' not contained in schema`)
     }
 
-    let criteria: ReadCriteria = {}
+    let criteria: Criteria = {}
 
     for (let idProp of entity.idProps) {
       if (object[idProp] !== undefined) {
@@ -229,10 +229,10 @@ export default class ObjectDb {
     return changes
   }
 
-  read<T>(entityName: string, criteria?: ReadCriteria): T[]
-  read<T>(classFunction: { new(): any }, criteria?: ReadCriteria): T[]
+  read<T>(entityName: string, criteria?: Criteria): T[]
+  read<T>(classFunction: { new(): any }, criteria?: Criteria): T[]
 
-  read<T>(arg0: any, criteria?: ReadCriteria): T[] {
+  read<T>(arg0: any, criteria?: Criteria): T[] {
     let entityName
     if (typeof arg0 == 'string') {
       entityName = arg0
@@ -454,7 +454,7 @@ export default class ObjectDb {
         let relationship = entity.relationships[relationshipName]
         l.dev('Wiring next relationship...', relationshipName, relationship)
 
-        let criteria = {} as ReadCriteria
+        let criteria: Criteria = {}
         criteria[relationship.otherId] = object[relationship.thisId]
 
         let relationshipObjects: any[] = this.read(relationship.otherEntity, criteria)
@@ -525,7 +525,7 @@ export default class ObjectDb {
             l.dev('Found relationship which is linking back to the entity represented by the given object', otherRelationshipName)
             l.dev('Retrieving all objects referencing the given object...')
 
-            let criteria = {} as ReadCriteria
+            let criteria: Criteria = {}
             criteria[otherRelationship.thisId] = object[otherRelationship.otherId]
             l.dev('criteria', criteria)
 
@@ -630,7 +630,7 @@ export default class ObjectDb {
             l.dev('Found relationship which is linking back to the entity represented by the given object', otherRelationshipName)
             l.dev('Retrieving all objects referencing the given object...')
 
-            let criteria = {} as ReadCriteria
+            let criteria: Criteria = {}
             criteria[otherRelationship.thisId] = object[otherRelationship.otherId]
             l.dev('criteria', criteria)
 
@@ -683,7 +683,7 @@ export default class ObjectDb {
         let relationship = entity.relationships[relationshipName]
         l.dev('relationship', relationship)
 
-        let criteria = {} as ReadCriteria
+        let criteria: Criteria = {}
         criteria[relationship.otherId] = object[relationship.thisId]
         l.dev('criteria', criteria)
 
