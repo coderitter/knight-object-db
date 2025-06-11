@@ -1,2 +1,2 @@
-export { default as ObjectDb } from './ObjectDb'
+export * from './ObjectDb'
 export * from './Schema'

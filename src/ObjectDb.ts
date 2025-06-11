@@ -6,7 +6,7 @@ import { idProps, Schema } from './Schema'
 
 let log = new Log('knight-object-db/ObjectDb.ts')
 
-export default class ObjectDb {
+export class ObjectDb {
 
   schema: Schema
 
