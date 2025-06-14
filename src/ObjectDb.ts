@@ -344,27 +344,27 @@ export class ObjectDb {
     let criteria = idProps(this.schema, entityName, object)
     l.dev('criteria', criteria)
 
-    let objectsToDelete: any[] = this.read(entityName, criteria)
-    l.dev('objects', objectsToDelete)
+    let objectsToRemove: any[] = this.read(entityName, criteria)
+    l.dev('objects', objectsToRemove)
 
-    if (objectsToDelete.length == 0) {
+    if (objectsToRemove.length == 0) {
       l.returning('No object to remove could be determined. Returning changes...', changes)
       return changes
     }
 
-    if (objectsToDelete.length > 1) {
+    if (objectsToRemove.length > 1) {
       throw new Error('There was more than one object for criteria: ' + JSON.stringify(criteria))
     }
 
-    let toDelete = objectsToDelete[0]
+    let toRemove = objectsToRemove[0]
 
     l.dev('Removing object from database...')
     let objects = this.getObjects(entityName)
-    let index = objects.indexOf(toDelete)
+    let index = objects.indexOf(toRemove)
     l.dev('index', index)
     objects.splice(index, 1)
 
-    let change = new Change(entityName, toDelete, 'delete')
+    let change = new Change(entityName, toRemove, 'delete')
     l.dev('Adding change to list of changes...', change)
     changes.add(change)
 
