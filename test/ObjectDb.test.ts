@@ -166,7 +166,7 @@ describe('ObjectDb', function() {
         new Change(many2, 'create')
       ])
 
-      let objects1 = db.getObjects('Object1')
+      let objects1: any[] = db.getObjects('Object1')
       expect(objects1).to.be.not.undefined
       expect(objects1.length).to.equal(2)
       expect(objects1[0].object1).to.equal(obj12)
@@ -175,7 +175,7 @@ describe('ObjectDb', function() {
       expect(objects1[1].object1).to.equal(obj11)
       expect(objects1[1].object2).to.equal(obj22)
 
-      let objects2 = db.getObjects('Object2')
+      let objects2: any[] = db.getObjects('Object2')
       expect(objects2).to.be.not.undefined
       expect(objects2.length).to.equal(2)
       expect(objects2[0].object1Id).to.equal(1)
@@ -185,7 +185,7 @@ describe('ObjectDb', function() {
       expect(objects2[1].object1).to.equal(obj12)
       expect(objects2[1].many).to.deep.equal([ many2 ])
 
-      let objectManies = db.getObjects('ManyObject')
+      let objectManies: any[] = db.getObjects('ManyObject')
       expect(objectManies).to.be.not.undefined
       expect(objectManies.length).to.equal(2)
       expect(objectManies[0].object1).to.equal(obj11)
@@ -223,7 +223,7 @@ describe('ObjectDb', function() {
         new Change(obj21, 'create'),
       ])
 
-      let objects1 = db.getObjects('Object1')
+      let objects1: any[] = db.getObjects('Object1')
       expect(objects1).to.be.not.undefined
       expect(objects1.length).to.equal(2)
       expect(objects1[0].id).to.equal(1)
@@ -235,7 +235,7 @@ describe('ObjectDb', function() {
       expect(objects1[1].object1).to.equal(obj11)
       expect(objects1[1].object2).to.equal(obj22)
 
-      let objects2 = db.getObjects('Object2')
+      let objects2: any[] = db.getObjects('Object2')
       expect(objects2).to.be.not.undefined
       expect(objects2.length).to.equal(2)
       expect(objects2[0].id).to.equal('y')
@@ -247,7 +247,7 @@ describe('ObjectDb', function() {
       expect(objects2[1].object1).to.equal(obj11)
       expect(objects2[1].many).to.deep.equal([ many1 ])
 
-      let objectManies = db.getObjects('ManyObject')
+      let objectManies: any[] = db.getObjects('ManyObject')
       expect(objectManies).to.be.not.undefined
       expect(objectManies.length).to.equal(2)
       expect(objectManies[0].object1Id).to.equal(1)

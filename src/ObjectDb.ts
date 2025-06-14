@@ -16,8 +16,8 @@ export class ObjectDb {
     this.schema = schema
   }
 
-  getObjects(entityName: string): any[]
-  getObjects(classFunction: { new(): any }): any[]
+  getObjects<T>(entityName: string): T[]
+  getObjects<T>(classFunction: { new(): T }): T[]
 
   getObjects(arg: any): any[] {
     let entityName
