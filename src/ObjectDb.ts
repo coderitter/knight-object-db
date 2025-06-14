@@ -142,7 +142,7 @@ export class ObjectDb {
 
     l.dev('Determining existing objects using criteria', criteria)
 
-    let existingObjects: any[] = this.read(entityName, criteria)
+    let existingObjects: any[] = this.find(entityName, criteria)
     l.dev('existingObjects', existingObjects)
 
     if (existingObjects.length > 1) {
@@ -229,10 +229,10 @@ export class ObjectDb {
     return changes
   }
 
-  read<T>(entityName: string, criteria?: Criteria): T[]
-  read<T>(classFunction: { new(): any }, criteria?: Criteria): T[]
+  find<T>(entityName: string, criteria?: Criteria): T[]
+  find<T>(classFunction: { new(): any }, criteria?: Criteria): T[]
 
-  read<T>(arg0: any, criteria?: Criteria): T[] {
+  find<T>(arg0: any, criteria?: Criteria): T[] {
     let entityName
     if (typeof arg0 == 'string') {
       entityName = arg0
@@ -344,7 +344,7 @@ export class ObjectDb {
     let criteria = idProps(this.schema, entityName, object)
     l.dev('criteria', criteria)
 
-    let objectsToRemove: any[] = this.read(entityName, criteria)
+    let objectsToRemove: any[] = this.find(entityName, criteria)
     l.dev('objects', objectsToRemove)
 
     if (objectsToRemove.length == 0) {
@@ -457,7 +457,7 @@ export class ObjectDb {
         let criteria: Criteria = {}
         criteria[relationship.otherId] = object[relationship.thisId]
 
-        let relationshipObjects: any[] = this.read(relationship.otherEntity, criteria)
+        let relationshipObjects: any[] = this.find(relationship.otherEntity, criteria)
         l.dev('relationshipObjects', relationshipObjects)
 
         if (relationshipObjects.length == 0) {
@@ -529,7 +529,7 @@ export class ObjectDb {
             criteria[otherRelationship.thisId] = object[otherRelationship.otherId]
             l.dev('criteria', criteria)
 
-            let otherObjects: any[] = this.read(otherEntityName, criteria)
+            let otherObjects: any[] = this.find(otherEntityName, criteria)
             l.dev('otherObjects', otherObjects)
 
             for (let otherObject of otherObjects) {
@@ -634,7 +634,7 @@ export class ObjectDb {
             criteria[otherRelationship.thisId] = object[otherRelationship.otherId]
             l.dev('criteria', criteria)
 
-            let otherObjects: any[] = this.read(otherEntityName, criteria)
+            let otherObjects: any[] = this.find(otherEntityName, criteria)
             l.dev('otherObjects', otherObjects)
 
             for (let otherObject of otherObjects) {
@@ -687,7 +687,7 @@ export class ObjectDb {
         criteria[relationship.otherId] = object[relationship.thisId]
         l.dev('criteria', criteria)
 
-        let relationshipObjects: any[] = this.read(relationship.otherEntity, criteria)
+        let relationshipObjects: any[] = this.find(relationship.otherEntity, criteria)
         l.dev('relationshipObjects', relationshipObjects)
 
         if (relationship.manyToOne === true) {

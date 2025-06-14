@@ -707,7 +707,7 @@ describe('ObjectDb', function() {
     })
   })
 
-  describe('read', function() {
+  describe('find', function() {
     it('should find all entities with certain criteria', async function() {
       let db = new ObjectDb(schema)
 
@@ -716,7 +716,7 @@ describe('ObjectDb', function() {
       db.integrate('Object1', { id: 3, a: 'a', b: 2 })
       db.integrate('Object1', { id: 4, a: 'b', b: 2 })
 
-      let result: any[] = db.read('Object1', { a: ['a', 'b'], b: 1 })
+      let result: any[] = db.find('Object1', { a: ['a', 'b'], b: 1 })
 
       expect(result.length).to.equal(2)
       expect(result[0].a).to.equal('a')
