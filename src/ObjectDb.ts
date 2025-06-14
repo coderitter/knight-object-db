@@ -230,7 +230,7 @@ export class ObjectDb {
   }
 
   find<T>(entityName: string, criteria?: Criteria): T[]
-  find<T>(classFunction: { new(): any }, criteria?: Criteria): T[]
+  find<T>(classFunction: { new(): T }, criteria?: Criteria): T[]
 
   find<T>(arg0: any, criteria?: Criteria): T[] {
     let entityName
