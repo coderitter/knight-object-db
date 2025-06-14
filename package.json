@@ -1,6 +1,6 @@
 {
   "name": "knight-object-db",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "An in-memory database for objects",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
