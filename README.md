@@ -329,18 +329,18 @@ db.remove(Knight, [{ id: 1 }, { id: 2 }])
 db.remove('Knight', [{ id: 1 }, { id: 2 }])
 ```
 
-### Querying the database
+### Finding objects in the database
 
 The database implements the a querying API on the basis of the `Criteria` interface which is part of [knight-criteria](https://github.com/c0deritter/knight-criteria) package.
 
 ```typescript
 /* returns all knights with the id 1 */
-db.read(Knight, { id: 1 })
-db.read('Knight', { id: 1 })
+db.find(Knight, { id: 1 })
+db.find('Knight', { id: 1 })
 
 /* returns all knights which name starts with 'g' */
-db.read(Knight, { name: { operator: 'LIKE', value: 'g%' }})
-db.read('Knight', { name: { operator: 'LIKE', value: 'g%' }})
+db.find(Knight, { name: { operator: 'LIKE', value: 'g%' }})
+db.find('Knight', { name: { operator: 'LIKE', value: 'g%' }})
 ```
 
 The returned objects are fully wired and ready to use. The database also ensures that the received objects will stay the same throughout the lifetime of the database.
