@@ -42,7 +42,7 @@ import { Schema } from 'knight-object-db'
 
 let schema = {
     // the keys in the root schema object are names of tables (be aware of casing!)
-    'knight': {
+    'Knight': {
         // you need to define the id properties
         // this information will be used to determine if two objects are the same
         idProps: ['id'],
@@ -77,22 +77,37 @@ let schema = {
         },
     },
 
-    'address': {
-        columns: {
-            'knight_id': 'knight_id',
-            'street': 'street'
-        },
+    'Address': {
+        idProps: ['knightId'],
         relationships: {
             'knight': {
                 manyToOne: true,
-                thisId: 'knight_id',
+                thisId: 'knightId',
                 otherEntity: 'knight',
-                otherId: 'id',
+                otherId: 'id'
             }
         }
     } as Schema
 }
 ```
+
+Check if your schema references properties that are actually there.
+
+```typescript
+let issues: string[] = checkSchema(objectDbSchema, [
+    new Knight({
+        id: 1,
+        bestFriend: {} as any, // provide an empty object
+        knightsWhoThinkIAmTheirBestFriend: [] as any, // provide an empty array
+        address: {} as any
+    }),
+    new Address({
+        knightId: 1
+    })
+])
+```
+
+Just give the `checkSchema` method an array of the typed objects that you have build the schema for and inside of those objects, use prototypical values so that the mechanism can find and compare the properties with your definition. In the case of relationships, provide either an empty object for many-to-one relationships or an empty array for one-to-many relationships.
 
 ### Initializing the database
 
