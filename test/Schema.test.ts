@@ -4,12 +4,14 @@ import 'mocha'
 
 
 class A {
+  irrelevantProp?: boolean
   constructor(props?: any) {
     Object.assign(this, props)
   }
 }
 
 class B {
+  irrelevantProp?: boolean
   constructor(props?: any) {
     Object.assign(this, props)
   }
