@@ -16,7 +16,7 @@ describe('ObjectDb', function() {
       expect(changes.changes[0]).to.deep.equal(
         new Change(obj, 'create'))
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.not.undefined
       expect(objects.length).to.equal(1)
       expect(objects[0]).to.equal(obj)
@@ -39,7 +39,7 @@ describe('ObjectDb', function() {
       expect(changes.changes[0]).to.deep.equal(
         new Change(Object1, obj, 'create'))
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.not.undefined
       expect(objects.length).to.equal(1)
       expect(objects[0]).to.equal(obj)
@@ -62,7 +62,7 @@ describe('ObjectDb', function() {
       expect(changes.changes[2]).to.deep.equal(
         new Change(objs[2], 'create'))
       
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.not.undefined
       expect(objects.length).to.equal(3)
       expect(objects[0]).to.equal(objs[0])
@@ -98,7 +98,7 @@ describe('ObjectDb', function() {
         new Change('Object1', objs[0], 'create'), new Change('Object1', objs[1], 'create'), new Change('Object1', objs[2], 'create')
       ])
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.not.undefined
       expect(objects.length).to.equal(3)
       expect(objects[0]).to.equal(objs[0])
@@ -121,12 +121,12 @@ describe('ObjectDb', function() {
       expect(changes.changes[1]).to.deep.equal(
         new Change(objs[1], 'create'))
 
-      let objects1 = db.getObjects('Object1')
+      let objects1 = db.getAll('Object1')
       expect(objects1).to.be.not.undefined
       expect(objects1.length).to.equal(1)
       expect(objects1[0]).to.equal(objs[0])
 
-      let objects2 = db.getObjects('Object2')
+      let objects2 = db.getAll('Object2')
       expect(objects2).to.be.not.undefined
       expect(objects2.length).to.equal(1)
       expect(objects2[0]).to.equal(objs[1])
@@ -166,7 +166,7 @@ describe('ObjectDb', function() {
         new Change(many2, 'create')
       ])
 
-      let objects1: any[] = db.getObjects('Object1')
+      let objects1: any[] = db.getAll('Object1')
       expect(objects1).to.be.not.undefined
       expect(objects1.length).to.equal(2)
       expect(objects1[0].object1).to.equal(obj12)
@@ -175,7 +175,7 @@ describe('ObjectDb', function() {
       expect(objects1[1].object1).to.equal(obj11)
       expect(objects1[1].object2).to.equal(obj22)
 
-      let objects2: any[] = db.getObjects('Object2')
+      let objects2: any[] = db.getAll('Object2')
       expect(objects2).to.be.not.undefined
       expect(objects2.length).to.equal(2)
       expect(objects2[0].object1Id).to.equal(1)
@@ -185,7 +185,7 @@ describe('ObjectDb', function() {
       expect(objects2[1].object1).to.equal(obj12)
       expect(objects2[1].many).to.deep.equal([ many2 ])
 
-      let objectManies: any[] = db.getObjects('ManyObject')
+      let objectManies: any[] = db.getAll('ManyObject')
       expect(objectManies).to.be.not.undefined
       expect(objectManies.length).to.equal(2)
       expect(objectManies[0].object1).to.equal(obj11)
@@ -223,7 +223,7 @@ describe('ObjectDb', function() {
         new Change(obj21, 'create'),
       ])
 
-      let objects1: any[] = db.getObjects('Object1')
+      let objects1: any[] = db.getAll('Object1')
       expect(objects1).to.be.not.undefined
       expect(objects1.length).to.equal(2)
       expect(objects1[0].id).to.equal(1)
@@ -235,7 +235,7 @@ describe('ObjectDb', function() {
       expect(objects1[1].object1).to.equal(obj11)
       expect(objects1[1].object2).to.equal(obj22)
 
-      let objects2: any[] = db.getObjects('Object2')
+      let objects2: any[] = db.getAll('Object2')
       expect(objects2).to.be.not.undefined
       expect(objects2.length).to.equal(2)
       expect(objects2[0].id).to.equal('y')
@@ -247,7 +247,7 @@ describe('ObjectDb', function() {
       expect(objects2[1].object1).to.equal(obj11)
       expect(objects2[1].many).to.deep.equal([ many1 ])
 
-      let objectManies: any[] = db.getObjects('ManyObject')
+      let objectManies: any[] = db.getAll('ManyObject')
       expect(objectManies).to.be.not.undefined
       expect(objectManies.length).to.equal(2)
       expect(objectManies[0].object1Id).to.equal(1)
@@ -326,7 +326,7 @@ describe('ObjectDb', function() {
       let updateObj = new Object1(1, 'b', 2, 2, 'x')
       let changes = db.integrate(updateObj)
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.not.undefined
       expect(objects.length).to.equal(1)
       expect(objects[0]).to.equal(obj)
@@ -350,7 +350,7 @@ describe('ObjectDb', function() {
       }
       let changes = db.integrate('Object1', updateObj)
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.not.undefined
       expect(objects.length).to.equal(1)
       expect(objects[0]).to.equal(obj)
@@ -381,7 +381,7 @@ describe('ObjectDb', function() {
 
       let changes = db.integrate('Object1', updateObj)
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.not.undefined
       expect(objects.length).to.equal(1)
       expect(objects[0]).to.equal(obj)
@@ -412,7 +412,7 @@ describe('ObjectDb', function() {
 
       let changes = db.integrate('Object1', updateObj)
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.not.undefined
       expect(objects.length).to.equal(1)
       expect(objects[0]).to.equal(obj)
@@ -641,7 +641,7 @@ describe('ObjectDb', function() {
       expect(obj1.property2).to.equal(2)
       expect(obj1.object1).to.equal(obj1)
 
-      let object1s = db.getObjects('Object1')
+      let object1s = db.getAll('Object1')
       expect(object1s.length).to.equal(1)
       expect(object1s[0]).to.equal(obj1)
 
@@ -665,7 +665,7 @@ describe('ObjectDb', function() {
 
       expect(obj11.object1).to.equal(obj13)
 
-      let object1s = db.getObjects('Object1')
+      let object1s = db.getAll('Object1')
       expect(object1s.length).to.equal(3)
       expect(object1s[0]).to.equal(obj11)
       expect(object1s[1]).to.equal(obj12)
@@ -692,11 +692,11 @@ describe('ObjectDb', function() {
 
       expect(obj1.many).to.deep.equal([ many1, many2 ])
 
-      let object1s = db.getObjects('Object1')
+      let object1s = db.getAll('Object1')
       expect(object1s.length).to.equal(1)
       expect(object1s[0]).to.equal(obj1)
 
-      let manyObjects = db.getObjects('ManyObject')
+      let manyObjects = db.getAll('ManyObject')
       expect(manyObjects.length).to.equal(2)
       expect(manyObjects[0]).to.equal(many1)
       expect(manyObjects[1]).to.equal(many2)
@@ -737,7 +737,7 @@ describe('ObjectDb', function() {
       expect(changes.changes.length).to.equal(1)
       expect(changes.changes[0]).to.deep.equal(new Change(obj, 'delete'))
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.empty
     })
 
@@ -752,7 +752,7 @@ describe('ObjectDb', function() {
       expect(changes.changes[0]).to.deep.equal(
         new Change(Object1, obj, 'delete'))
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.empty
     })
 
@@ -775,7 +775,7 @@ describe('ObjectDb', function() {
       expect(changes.changes[2]).to.deep.equal(
         new Change(objs[2], 'delete'))
       
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.empty
     })
 
@@ -795,7 +795,7 @@ describe('ObjectDb', function() {
         new Change('Object1', objs[0], 'delete'), new Change('Object1', objs[1], 'delete'), new Change('Object1', objs[2], 'delete')
       ])
 
-      let objects = db.getObjects('Object1')
+      let objects = db.getAll('Object1')
       expect(objects).to.be.empty
     })
 
@@ -816,10 +816,10 @@ describe('ObjectDb', function() {
       expect(changes.changes[1]).to.deep.equal(
         new Change(objs[1], 'delete'))
 
-      let objects1 = db.getObjects('Object1')
+      let objects1 = db.getAll('Object1')
       expect(objects1).to.be.empty
 
-      let objects2 = db.getObjects('Object2')
+      let objects2 = db.getAll('Object2')
       expect(objects2).to.be.empty
     })
 
@@ -835,7 +835,7 @@ describe('ObjectDb', function() {
         new Change(obj1, 'delete')
       ])
 
-      let objects1 = db.getObjects('Object1')
+      let objects1 = db.getAll('Object1')
       expect(objects1).to.be.empty
     })
 
@@ -880,13 +880,13 @@ describe('ObjectDb', function() {
       expect(many2.object2).to.be.null
       expect(many2.object12).to.be.null
 
-      let objects1 = db.getObjects('Object1')
+      let objects1 = db.getAll('Object1')
       expect(objects1).to.be.empty
 
-      let objects2 = db.getObjects('Object2')
+      let objects2 = db.getAll('Object2')
       expect(objects2).to.be.empty
 
-      let objectManies = db.getObjects('ManyObject')
+      let objectManies = db.getAll('ManyObject')
       expect(objectManies).to.be.empty
     })
 
@@ -942,15 +942,15 @@ describe('ObjectDb', function() {
       expect(many2.object2).to.be.null
       expect(many2.object12).to.be.null
 
-      let objects1 = db.getObjects('Object1')
+      let objects1 = db.getAll('Object1')
       expect(objects1.length).to.be.equal(1)
       expect(objects1[0]).to.equal(obj12)
 
-      let objects2 = db.getObjects('Object2')
+      let objects2 = db.getAll('Object2')
       expect(objects2.length).to.be.equal(1)
       expect(objects2[0]).to.equal(obj21)
 
-      let objectManies = db.getObjects('ManyObject')
+      let objectManies = db.getAll('ManyObject')
       expect(objectManies).to.be.empty
     })
 
@@ -1012,13 +1012,13 @@ describe('ObjectDb', function() {
       expect(many2.object2).to.be.null
       expect(many2.object12).to.be.null
 
-      let objects1 = db.getObjects('Object1')
+      let objects1 = db.getAll('Object1')
       expect(objects1).to.be.empty
 
-      let objects2 = db.getObjects('Object2')
+      let objects2 = db.getAll('Object2')
       expect(objects2).to.be.empty
 
-      let objectManies = db.getObjects('ManyObject')
+      let objectManies = db.getAll('ManyObject')
       expect(objectManies).to.be.empty
     })
   })

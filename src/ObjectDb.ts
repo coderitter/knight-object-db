@@ -9,17 +9,16 @@ let log = new Log('knight-object-db/ObjectDb.ts')
 export class ObjectDb {
 
   schema: Schema
-
   objects: {[ entityName: string ]: any[] } = {}
 
   constructor(schema: Schema) {
     this.schema = schema
   }
 
-  getObjects<T>(entityName: string): T[]
-  getObjects<T>(classFunction: { new(): T }): T[]
+  getAll<T>(entityName: string): T[]
+  getAll<T>(classFunction: { new(): T }): T[]
 
-  getObjects(arg: any): any[] {
+  getAll(arg: any): any[] {
     let entityName
 
     if (typeof arg == 'string') {
@@ -119,7 +118,7 @@ export class ObjectDb {
       return changes
     }
 
-    let objects = this.getObjects(entityName)
+    let objects = this.getAll(entityName)
 
     // avoid circles
     if (objects.indexOf(object) > -1) {
@@ -245,7 +244,7 @@ export class ObjectDb {
       throw new Error('First given parameter was neither the entity name nor a constructor function')
     }
 
-    let objects = this.getObjects(entityName)
+    let objects = this.getAll(entityName)
     let entities: any[] = []
 
     for (let object of objects) {
@@ -339,7 +338,7 @@ export class ObjectDb {
       return changes
     }
 
-    l.dev('Determing object to remove...')
+    l.dev('Determining object to remove...')
 
     let criteria = idProps(this.schema, entityName, object)
     l.dev('criteria', criteria)
@@ -359,7 +358,7 @@ export class ObjectDb {
     let toRemove = objectsToRemove[0]
 
     l.dev('Removing object from database...')
-    let objects = this.getObjects(entityName)
+    let objects = this.getAll(entityName)
     let index = objects.indexOf(toRemove)
     l.dev('index', index)
     objects.splice(index, 1)
